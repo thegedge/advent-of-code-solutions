@@ -1,0 +1,11 @@
+{
+  "name": "2022-advent-of-code",
+  "version": "1.0.0",
+  "description": "2022 Advent of Code solutions",
+  "main": "index.js",
+  "repository": "https://github.com/thegedge/2022-advent-of-code",
+  "author": "Jason Gedge",
+  "license": "MIT",
+  "dependencies": {
+  }
+}
