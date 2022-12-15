@@ -11,6 +11,11 @@
   },
   "devDependencies": {
     "@types/lodash-es": "~4.17.6",
-    "@types/node": "~18.11.10"
+    "@types/node": "~18.11.10",
+    "prettier": "^2.8.1"
+  },
+  "prettier": {
+    "printWidth": 120,
+    "proseWrap": "always"
   }
 }
