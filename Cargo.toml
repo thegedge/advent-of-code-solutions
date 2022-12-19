@@ -1,0 +1,11 @@
+[package]
+name = "advent-of-code-2022"
+version = "0.0.1"
+authors = ["Jason Gedge"]
+
+[[bin]]
+name = "17"
+path = "17.rs"
+
+[dependencies]
+bitvec = "1"

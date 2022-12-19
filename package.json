@@ -17,5 +17,8 @@
   "prettier": {
     "printWidth": 120,
     "proseWrap": "always"
+  },
+  "scripts": {
+    "do": "node --use-strict --harmony --max-old-space-size=16000 --single-threaded"
   }
 }
