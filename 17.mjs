@@ -5,7 +5,7 @@ const data = await fs.readFile("./17.in", "utf8");
 
 // My first attempt represented it as multidimensional arrays of booleans. I realized this could be
 // much faster by doing boolean operations on numbers. If A & B != 0, they intersect.
-/** @type{[number, number, number[]][]} */
+/** @type {[number, number, number[]][]} */
 const shapes = [
   [4, 1, [0b11110000, 0b00000000, 0b00000000, 0b00000000]],
   [3, 3, [0b01000000, 0b11100000, 0b01000000, 0b00000000]],
