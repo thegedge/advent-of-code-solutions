@@ -139,7 +139,7 @@ const simulate = (map, directions) => {
   return direction + (x + 1) * 4 + (y + 1) * 1000;
 };
 
-// Part 1`
+// Part 1
 data
   .split("\n---\n")
   .map((group) => {

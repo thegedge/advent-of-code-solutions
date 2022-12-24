@@ -88,7 +88,7 @@ const solve = (monkeys, name, varToSolveFor) => {
   return result;
 };
 
-// Part 1`
+// Part 1
 data
   .split("\n---\n")
   .map((group) => evaluate(readMonkeys(group), "root"))

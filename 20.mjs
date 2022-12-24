@@ -41,7 +41,7 @@ const decrypt = (numbers) => {
   return numbers;
 };
 
-// Part 1`
+// Part 1
 data
   .split("\n---\n")
   .map((group) => {
