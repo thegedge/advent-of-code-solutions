@@ -1,17 +1,18 @@
 import { range } from "lodash-es";
+import { createHash } from "node:crypto";
 import fs from "node:fs/promises";
 
 const data = await fs.readFile("./17.in", "utf8");
 
 // My first attempt represented it as multidimensional arrays of booleans. I realized this could be
 // much faster by doing boolean operations on numbers. If A & B != 0, they intersect.
-/** @type {[number, number, number[]][]} */
-const shapes = [
-  [4, 1, [0b11110000, 0b00000000, 0b00000000, 0b00000000]],
-  [3, 3, [0b01000000, 0b11100000, 0b01000000, 0b00000000]],
-  [3, 3, [0b00100000, 0b00100000, 0b11100000, 0b00000000]],
-  [1, 4, [0b10000000, 0b10000000, 0b10000000, 0b10000000]],
-  [2, 2, [0b11000000, 0b11000000, 0b00000000, 0b00000000]],
+/** @type {[number, number, number[], number][]} */
+const rocks = [
+  [4, 1, [0b11110000, 0b00000000, 0b00000000, 0b00000000], 0b11110000_00000000_00000000_00000000],
+  [3, 3, [0b01000000, 0b11100000, 0b01000000, 0b00000000], 0b01000000_11100000_01000000_00000000],
+  [3, 3, [0b00100000, 0b00100000, 0b11100000, 0b00000000], 0b00100000_00100000_11100000_00000000],
+  [1, 4, [0b10000000, 0b10000000, 0b10000000, 0b10000000], 0b10000000_10000000_10000000_10000000],
+  [2, 2, [0b11000000, 0b11000000, 0b00000000, 0b00000000], 0b11000000_11000000_00000000_00000000],
 ];
 
 const MAP_WIDTH = 7;
@@ -21,10 +22,12 @@ const isBitSet = (v, n) => (v & (1 << (7 - n))) != 0;
 const shapeInBounds = (shape, x) => x >= 0 && x + shape[0] <= MAP_WIDTH;
 
 class Map {
-  constructor(max = 500) {
+  // Making a guess here that the the max drop doesn't go beyond this max, to avoid having to allocate a ton of memory
+  constructor(max = 50) {
     this.lo = 0;
     this.length = max;
-    this.data = new Array(max);
+
+    this.data = new Uint8Array(max);
     this.data.fill(0xff);
   }
 
@@ -34,23 +37,22 @@ class Map {
   }
 
   test(shape, x, y) {
-    // Small optimization: go in reverse, because we're likely to intersect on the bottom
-    for (let row = shape[1] - 1; row >= 0; --row) {
-      if (y + row < 0) {
-        return false;
-      }
+    const mapVal = this.top4(x, y);
+    return (shape[3] & mapVal) != 0;
+  }
 
-      if (((shape[2][row] >> x) & this.get(y + row)) != 0) {
-        return true;
-      }
-    }
-
-    return false;
+  top4(x, y) {
+    return (
+      (this.get(y + 0) << (24 + x)) |
+      (this.get(y + 1) << (16 + x)) |
+      (this.get(y + 2) << (8 + x)) |
+      (this.get(y + 3) << x)
+    );
   }
 
   get(row) {
     const index = this.lo + row;
-    return this.data[index >= this.data.length ? index - this.length : index];
+    return row < 0 ? 0 : this.data[index >= this.data.length ? index - this.length : index];
   }
 
   set(shape, x, y) {
@@ -62,6 +64,10 @@ class Map {
 
   union(row, value) {
     this.data[(this.lo + row) % this.data.length] |= value;
+  }
+
+  get hash() {
+    return createHash("sha1").update(this.data).digest("base64");
   }
 
   dump(shape, x, y) {
@@ -93,7 +99,7 @@ class Map {
 class Simulator {
   constructor(group) {
     this.deltas = group.split("").map((v) => (v == "<" ? -1 : 1));
-    this.deltaIndex = 0;
+    this.jetIndex = 0;
     this.height = 0;
     this.map = new Map();
     this.start = 3;
@@ -104,7 +110,7 @@ class Simulator {
   simulateEmptySpace(shape) {
     // First few spaces we won't intersect the map, so just update x
     let x = 2;
-    let deltaIndex = this.deltaIndex;
+    let deltaIndex = this.jetIndex;
 
     for (let iter = 0; iter < this.start; ++iter) {
       const newX = x + this.deltas[deltaIndex];
@@ -117,13 +123,13 @@ class Simulator {
     }
 
     this.x = x;
-    this.deltaIndex = deltaIndex;
+    this.jetIndex = deltaIndex;
   }
 
   simulateOtherSpace(shape) {
     let x = this.x;
     let y = -shape[1];
-    let deltaIndex = this.deltaIndex;
+    let deltaIndex = this.jetIndex;
 
     while (y + shape[1] <= this.height) {
       const newX = x + this.deltas[deltaIndex];
@@ -145,7 +151,7 @@ class Simulator {
 
     this.x = x;
     this.y = y;
-    this.deltaIndex = deltaIndex;
+    this.jetIndex = deltaIndex;
   }
 
   updateMap() {
@@ -156,22 +162,42 @@ class Simulator {
   }
 
   run(N) {
-    // const startTime = performance.now();
+    // This is our cache to hopefully find a cycle
+    const cache = rocks.map(() => ({}));
+    let checkCycles = true;
+    for (let iter = 0; iter < N; ++iter) {
+      const rock = iter % rocks.length;
+      const shape = rocks[rock];
 
-    while (N > 0) {
-      for (let rock = 0; rock < shapes.length && N > 0; ++rock, --N) {
-        const shape = shapes[rock];
-        this.simulateEmptySpace(shape);
-        this.simulateOtherSpace(shape);
-        this.updateMap();
-        this.map.set(shape, this.x, this.y);
-        // if (rock == 2) break;
+      // What we're doing here is cycle detection. If the state of the map currently is something we've seen before,
+      // we know the result already, so just repeat that. I definitely struggled some to get this right. We only need
+      // to do this once to really whittle this down a ton.
+      if (checkCycles) {
+        const key = `${this.map.hash},${this.jetIndex}`;
+        if (key in cache[rock]) {
+          const [seenAt, height] = cache[rock][key];
+
+          // We need to compute the length of the cycle as the difference between current iteration and when we last
+          // saw the cached state. Similarly for the height of the cycle.
+          const cycleLength = iter - seenAt;
+          const heightPerCycle = this.height - height;
+          const repeats = Math.floor((N - iter) / cycleLength);
+
+          // Make sure the cycle doesn't require more iterations than what we have left
+          if (repeats > 0) {
+            this.height += heightPerCycle * repeats;
+            iter += repeats * cycleLength;
+          }
+        } else {
+          cache[rock][key] = [iter, this.height];
+        }
       }
-    }
 
-    // map.dump();
-    // const usPerIter = (1000 * (performance.now() - startTime)) / iters;
-    // console.log(usPerIter.toFixed(3));
+      this.simulateEmptySpace(shape);
+      this.simulateOtherSpace(shape);
+      this.updateMap();
+      this.map.set(shape, this.x, this.y);
+    }
 
     return this.height;
   }
@@ -187,6 +213,8 @@ data
 // Part 2
 data
   .split("\n")
-  .map((group) => new Simulator(group).run(10_000_000))
-  // .map((group) => new Simulator(group).run(1_000_000_000_000))
+  // I didn't see it at first, but realized that this number is WAY too big to brute force. It took some time to
+  // realize, but the only meaningful way to do this many iterations is to assume there are cycles, and if we can
+  // detect a cycle we can quickly reduce this huge number (see Simulator#run).
+  .map((group) => new Simulator(group).run(1_000_000_000_000))
   .forEach((v) => console.log(v));
