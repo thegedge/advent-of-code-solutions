@@ -1,0 +1,20 @@
+{
+  "name": "advent-of-code-solutions",
+  "version": "2.0.23",
+  "description": "Solutions for various Advent of Coders",
+  "main": "index.mjs",
+  "repository": "https://github.com/thegedge/advent-of-code-solutions",
+  "author": "Jason Gedge",
+  "license": "MIT",
+  "dependencies": {
+    "lodash-es": "^4.17.21"
+  },
+  "devDependencies": {
+    "@types/lodash-es": "^4.17.12",
+    "@types/node": "^20.10.5",
+    "prettier": "^3.1.1"
+  },
+  "scripts": {
+    "do": "node --use-strict --harmony --max-old-space-size=16000 --single-threaded"
+  }
+}

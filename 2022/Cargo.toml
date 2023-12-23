@@ -4,8 +4,8 @@ version = "0.0.1"
 authors = ["Jason Gedge"]
 
 [[bin]]
-name = "17"
-path = "17.rs"
+name = "2022-17"
+path = "2022/17.rs"
 
 [dependencies]
 bitvec = "1"

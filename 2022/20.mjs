@@ -6,7 +6,7 @@ const data = await fs.readFile("./20.in", "utf8");
 const mod = (v, n) => (v < 0 ? (v % n) + n : v % n);
 
 const move = (array, index, amount) => {
-  if (amount == 0) {
+  if (amount == 0n) {
     return;
   }
 
@@ -29,7 +29,7 @@ const move = (array, index, amount) => {
   return array;
 };
 
-const decrypt = (numbers) => {
+const mix = (numbers, original = numbers) => {
   const moved = range(numbers.length).map(() => false);
   for (let iter = 0; iter < numbers.length; ++iter) {
     const indexToMove = moved.findIndex((v) => !v);
@@ -46,7 +46,7 @@ data
   .split("\n---\n")
   .map((group) => {
     const numbers = group.split("\n").map(Number);
-    const file = decrypt(numbers);
+    const file = mix(numbers);
     const zeroIndex = file.findIndex((v) => v == 0);
     return (
       file[(1000 + zeroIndex) % file.length] +
@@ -54,12 +54,24 @@ data
       file[(3000 + zeroIndex) % file.length]
     );
   })
+  .map(Number)
   .forEach((v) => console.log(v));
 
 // Part 2
 data
   .split("\n---\n")
   .map((group) => {
-    //
+    const numbers = group
+      .split("\n")
+      .map(Number)
+      .map((v) => v * 811589153);
+    const file = range(10).reduce((prev, _iteration) => mix(prev, numbers), numbers);
+    const zeroIndex = file.findIndex((v) => v == 0);
+    return (
+      file[(1000 + zeroIndex) % file.length] +
+      file[(2000 + zeroIndex) % file.length] +
+      file[(3000 + zeroIndex) % file.length]
+    );
   })
+  .map(Number)
   .forEach((v) => console.log(v));
