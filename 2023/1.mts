@@ -1,4 +1,4 @@
-import { sumOf } from "https://deno.land/std@0.210.0/collections/mod.ts";
+import { sumOf } from "./utils.mts";
 
 const groups = (await Deno.readTextFile(new URL("", import.meta.url.replace(".mts", ".in")).pathname)).split("\n\n");
 
@@ -11,7 +11,7 @@ const solvePart1 = () => {
       return sumOf(group.split("\n"), (line) => {
         const first = line.match(FIRST_DIGIT_REGEX)![1];
         const last = line.match(LAST_DIGIT_REGEX)![1];
-        return Number(first + last);
+        return BigInt(first + last);
       });
     } catch (_error) {
       // Second test example has a line with no numbers
@@ -46,7 +46,7 @@ const solvePart2 = () => {
       const digits = Array.from(line.matchAll(DIGIT_REGEX)).map((match) => match[1]);
       const first = toNum(digits[0]);
       const last = toNum(digits[digits.length - 1]);
-      return Number(first + last);
+      return BigInt(first + last);
     });
   });
 

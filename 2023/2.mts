@@ -1,10 +1,10 @@
-import { deepMerge, sumOf } from "https://deno.land/std@0.210.0/collections/mod.ts";
+import { deepMerge, max, sumOf } from "./utils.mts";
 
 const groups = (await Deno.readTextFile(new URL("", import.meta.url.replace(".mts", ".in")).pathname)).split("\n\n");
 
 const parseLine = (game: string) => {
   const [head, tail] = game.split(":");
-  const id = Number(head.split(" ")[1]);
+  const id = BigInt(head.split(" ")[1]);
   return {
     id,
     games: tail.split(";").map((game) => {
@@ -13,7 +13,7 @@ const parseLine = (game: string) => {
         Object.fromEntries(
           game.split(",").map((piece) => {
             const [num, color] = piece.trim().split(" ");
-            return [color, Number(num)];
+            return [color, BigInt(num)];
           })
         )
       );
@@ -25,7 +25,7 @@ const solvePart1 = () => {
   const results = groups.map((lines) => {
     const games = lines.split("\n").map((line) => parseLine(line));
     return sumOf(games, ({ id, games }) => {
-      return games.every((show) => show.red <= 12 && show.green <= 13 && show.blue <= 15) ? id : 0;
+      return games.every((show) => show.red <= 12 && show.green <= 13 && show.blue <= 15) ? id : 0n;
     });
   });
 
@@ -36,13 +36,13 @@ const solvePart2 = () => {
   const results = groups.map((lines) => {
     const games = lines.split("\n").map((line) => parseLine(line));
     return games.reduce((sum, { games }) => {
-      let minR = 0;
-      let minG = 0;
-      let minB = 0;
+      let minR = 0n;
+      let minG = 0n;
+      let minB = 0n;
       for (const show of games) {
-        minR = Math.max(minR, show.red);
-        minG = Math.max(minG, show.green);
-        minB = Math.max(minB, show.blue);
+        minR = max(minR, show.red);
+        minG = max(minG, show.green);
+        minB = max(minB, show.blue);
       }
       return sum + BigInt(minR) * BigInt(minG) * BigInt(minB);
     }, 0n);
