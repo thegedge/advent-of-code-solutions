@@ -1,4 +1,4 @@
-export { chunk, deepMerge, minBy, zip } from "std/collections/mod.ts";
+export { chunk, deepMerge, groupBy, maxBy, minBy, sortBy, zip } from "std/collections/mod.ts";
 
 export const sumOf = <T>(arr: T[], fn: (item: T, index: number) => bigint): bigint => {
   return arr.reduce((sum, item, index) => sum + fn(item, index), 0n);
@@ -24,4 +24,22 @@ export const minMap = <T, R extends number | bigint>(arr: T[], fn: (item: T, ind
 
 export const range = (n: number): number[] => {
   return [...Array(n).keys()];
+};
+
+export const replaceAll = <T>(arr: T[], target: T, replacement: T): T[] => {
+  return arr.map((v) => (v === target ? replacement : v));
+};
+
+export const countBy = <T extends string, V extends string>(
+  iterable: Iterable<T>,
+  selector: (element: T, index: number) => V
+): Map<V, number> => {
+  let index = 0;
+  const result = new Map<V, number>();
+  for (const v of iterable) {
+    const key = selector(v, index);
+    result.set(key, (result.get(key) ?? 0) + 1);
+    ++index;
+  }
+  return result;
 };
