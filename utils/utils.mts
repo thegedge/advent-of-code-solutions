@@ -1,4 +1,4 @@
-export { chunk, deepMerge, minBy } from "std/collections/mod.ts";
+export { chunk, deepMerge, minBy, zip } from "std/collections/mod.ts";
 
 export const sumOf = <T>(arr: T[], fn: (item: T, index: number) => bigint): bigint => {
   return arr.reduce((sum, item, index) => sum + fn(item, index), 0n);
@@ -20,4 +20,8 @@ export const minMap = <T, R extends number | bigint>(arr: T[], fn: (item: T, ind
     }
     return min < value ? min : value;
   }, null as R | null);
+};
+
+export const range = (n: number): number[] => {
+  return [...Array(n).keys()];
 };
