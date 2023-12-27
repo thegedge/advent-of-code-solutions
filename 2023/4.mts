@@ -1,4 +1,4 @@
-import { sumOf } from "./utils.mts";
+import { sumOf } from "../utils/utils.mts";
 
 const groups = (await Deno.readTextFile(new URL("", import.meta.url.replace(".mts", ".in")).pathname)).split("\n\n");
 

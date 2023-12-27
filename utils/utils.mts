@@ -1,3 +1,4 @@
+export { cartesianProduct } from "https://deno.land/x/combinatorics@1.1.2/mod.ts";
 export { chunk, deepMerge, groupBy, maxBy, minBy, sortBy, zip } from "std/collections/mod.ts";
 
 export const sumOf = <T>(arr: T[], fn: (item: T, index: number) => bigint): bigint => {
@@ -42,4 +43,26 @@ export const countBy = <T extends string, V extends string>(
     ++index;
   }
   return result;
+};
+
+/** Greatest common divisor */
+const gcd = (a: bigint, b: bigint) => {
+  return b == 0n ? a : gcd(b, a % b);
+};
+
+/** Least common multiple */
+export const lcm = (...numbers: bigint[]): bigint => {
+  if (numbers.length == 0) {
+    throw new Error("Cannot find LCM of empty list");
+  }
+
+  if (numbers.length == 1) {
+    return numbers[0];
+  }
+
+  if (numbers.length == 2) {
+    return (numbers[0] * numbers[1]) / gcd(numbers[0], numbers[1]);
+  }
+
+  return lcm(numbers[0], lcm(...numbers.slice(1)));
 };
