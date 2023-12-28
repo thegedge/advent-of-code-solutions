@@ -23,6 +23,11 @@ export const minMap = <T, R extends number | bigint>(arr: T[], fn: (item: T, ind
   }, null as R | null);
 };
 
+export const tee = <T>(v: T): T => {
+  console.log(v);
+  return v;
+};
+
 export const range = (n: number): number[] => {
   return [...Array(n).keys()];
 };
@@ -46,7 +51,7 @@ export const countBy = <T extends string, V extends string>(
 };
 
 /** Greatest common divisor */
-const gcd = (a: bigint, b: bigint) => {
+const gcd = (a: bigint, b: bigint): bigint => {
   return b == 0n ? a : gcd(b, a % b);
 };
 
