@@ -1,6 +1,10 @@
-import { sumOf } from "../utils/utils.mts";
+import { sumOf } from "../utils/collections.mts";
 
-const groups = (await Deno.readTextFile(new URL("", import.meta.url.replace(".mts", ".in")).pathname)).split("\n\n");
+const groups = (
+  await Deno.readTextFile(
+    new URL("", import.meta.url.replace(".mts", ".in")).pathname
+  )
+).split("\n\n");
 
 const solvePart1 = () => {
   const FIRST_DIGIT_REGEX = /^[^\d]*?(\d)/;
@@ -43,7 +47,9 @@ const solvePart2 = () => {
 
   const calibrations = groups.map((group) => {
     return sumOf(group.split("\n"), (line) => {
-      const digits = Array.from(line.matchAll(DIGIT_REGEX)).map((match) => match[1]);
+      const digits = Array.from(line.matchAll(DIGIT_REGEX)).map(
+        (match) => match[1]
+      );
       const first = toNum(digits[0]);
       const last = toNum(digits[digits.length - 1]);
       return BigInt(first + last);

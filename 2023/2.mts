@@ -1,6 +1,11 @@
-import { deepMerge, max, sumOf } from "../utils/utils.mts";
+import { deepMerge, sumOf } from "../utils/collections.mts";
+import { max } from "../utils/math.mts";
 
-const groups = (await Deno.readTextFile(new URL("", import.meta.url.replace(".mts", ".in")).pathname)).split("\n\n");
+const groups = (
+  await Deno.readTextFile(
+    new URL("", import.meta.url.replace(".mts", ".in")).pathname
+  )
+).split("\n\n");
 
 const parseLine = (game: string) => {
   const [head, tail] = game.split(":");
@@ -25,7 +30,11 @@ const solvePart1 = () => {
   const results = groups.map((lines) => {
     const games = lines.split("\n").map((line) => parseLine(line));
     return sumOf(games, ({ id, games }) => {
-      return games.every((show) => show.red <= 12 && show.green <= 13 && show.blue <= 15) ? id : 0n;
+      return games.every(
+        (show) => show.red <= 12 && show.green <= 13 && show.blue <= 15
+      )
+        ? id
+        : 0n;
     });
   });
 

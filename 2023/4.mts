@@ -1,6 +1,10 @@
-import { sumOf } from "../utils/utils.mts";
+import { sumOf } from "../utils/collections.mts";
 
-const groups = (await Deno.readTextFile(new URL("", import.meta.url.replace(".mts", ".in")).pathname)).split("\n\n");
+const groups = (
+  await Deno.readTextFile(
+    new URL("", import.meta.url.replace(".mts", ".in")).pathname
+  )
+).split("\n\n");
 
 const numWinning = (line: string) => {
   const [_cardNum, numbers] = line.split(":");

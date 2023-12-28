@@ -1,10 +1,17 @@
-import { range, sumOf, zip } from "../utils/utils.mts";
+import { range, sumOf, zip } from "../utils/collections.mts";
 
-const groups = (await Deno.readTextFile(new URL("", import.meta.url.replace(".mts", ".in")).pathname)).split("\n\n");
+const groups = (
+  await Deno.readTextFile(
+    new URL("", import.meta.url.replace(".mts", ".in")).pathname
+  )
+).split("\n\n");
 
 const readData1 = (data: string) => {
   const [times, distances] = data.trim().split("\n");
-  return zip(times.trim().split(/ +/).slice(1).map(Number), distances.trim().split(/ +/).slice(1).map(Number));
+  return zip(
+    times.trim().split(/ +/).slice(1).map(Number),
+    distances.trim().split(/ +/).slice(1).map(Number)
+  );
 };
 
 const readData2 = (data: string) => {

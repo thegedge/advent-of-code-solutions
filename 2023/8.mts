@@ -1,4 +1,5 @@
-import { cartesianProduct, lcm } from "../utils/utils.mts";
+import { cartesianProduct } from "../utils/collections.mts";
+import { lcm } from "../utils/math.mts";
 
 const groups = (
   await Deno.readTextFile(

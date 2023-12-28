@@ -1,7 +1,11 @@
+import { chunk, minMap } from "../utils/collections.mts";
 import { Range } from "../utils/range.mts";
-import { chunk, minMap } from "../utils/utils.mts";
 
-const groups = (await Deno.readTextFile(new URL("", import.meta.url.replace(".mts", ".in")).pathname)).split("---");
+const groups = (
+  await Deno.readTextFile(
+    new URL("", import.meta.url.replace(".mts", ".in")).pathname
+  )
+).split("---");
 
 const readMap = (map: string) => {
   return map
@@ -49,19 +53,26 @@ const solvePart1 = () => {
 
 const solvePart2 = () => {
   const results = groups.map(readData).map(({ seeds, mappings }) => {
-    const startingRanges = chunk(seeds, 2).map(([lo, length]) => new Range(lo, lo + length - 1));
+    const startingRanges = chunk(seeds, 2).map(
+      ([lo, length]) => new Range(lo, lo + length - 1)
+    );
     const mappedRanges = mappings.reduce((ranges, mapping) => {
       const newRanges = [];
       while (ranges.length > 0) {
         const range = ranges.pop()!;
-        const overlapping = mapping.find((mappingRange) => range.overlaps(mappingRange.source));
+        const overlapping = mapping.find((mappingRange) =>
+          range.overlaps(mappingRange.source)
+        );
         if (overlapping) {
-          const [overlappingRange, nonOverlappingRanges] = overlapping.source.partition(range);
+          const [overlappingRange, nonOverlappingRanges] =
+            overlapping.source.partition(range);
 
           // Need to remap the bit that did overlap to the destination
           if (overlappingRange) {
             const offset = overlappingRange.lo - overlapping.source.lo;
-            newRanges.push(Range.span(overlapping.dest.lo + offset, overlappingRange.length));
+            newRanges.push(
+              Range.span(overlapping.dest.lo + offset, overlappingRange.length)
+            );
           }
 
           // May overlap with another range in this mapping
