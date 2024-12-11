@@ -1,15 +1,17 @@
 export { cartesianProduct } from "https://deno.land/x/combinatorics@1.1.2/mod.ts";
 export { chunk, deepMerge, groupBy, maxBy, minBy, sortBy, zip } from "std/collections/mod.ts";
 
+type SimpleLiteral = string | symbol | number | boolean | bigint;
+
 export const range = (n: number): number[] => {
   return [...Array(n).keys()];
 };
 
-export const sumOf = <T>(arr: T[], fn: (item: T, index: number) => bigint): bigint => {
+export const sumOf = <T,>(arr: T[], fn: (item: T, index: number) => bigint): bigint => {
   return arr.reduce((sum, item, index) => sum + fn(item, index), 0n);
 };
 
-export const countBy = <T extends string, V extends string>(
+export const countBy = <T extends SimpleLiteral, V extends SimpleLiteral>(
   iterable: Iterable<T>,
   selector: (element: T, index: number) => V
 ): Map<V, number> => {
@@ -23,7 +25,7 @@ export const countBy = <T extends string, V extends string>(
   return result;
 };
 
-export const replaceAll = <T>(arr: T[], target: T, replacement: T): T[] => {
+export const replaceAll = <T,>(arr: T[], target: T, replacement: T): T[] => {
   return arr.map((v) => (v === target ? replacement : v));
 };
 

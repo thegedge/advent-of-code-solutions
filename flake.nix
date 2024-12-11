@@ -19,10 +19,10 @@
             nix-direnv = pkgs.nix-direnv;
 
             deno = pkgs.deno;
-            nodejs = pkgs.nodejs_21;
+            nodejs = pkgs.nodejs_23;
             corepack = pkgs.corepack;
 
-            rust = pkgs.rust;
+            rustc = pkgs.rustc;
           };
 
           devShell = callPackage ./devShell.nix {

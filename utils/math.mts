@@ -20,6 +20,10 @@ export const lcm = (...numbers: bigint[]): bigint => {
   return lcm(numbers[0], lcm(...numbers.slice(1)));
 };
 
+export const abs = <T extends bigint | number>(a: T): T => {
+  return a < 0 ? -a : a;
+}
+
 export const min = <T extends bigint | number>(a: T, b: T): T => {
   return a < b ? a : b;
 };
