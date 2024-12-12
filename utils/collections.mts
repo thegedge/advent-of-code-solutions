@@ -38,3 +38,17 @@ export const minMap = <T, R extends number | bigint>(arr: T[], fn: (item: T, ind
     return min < value ? min : value;
   }, null as R | null);
 };
+
+export const combinations = function* <T>(array: T[], n: number, from = 0): Generator<T[]> {
+  if (n == 0) {
+    yield [];
+    return;
+  }
+
+  for (let i = from; i <= array.length - n; ++i) {
+    const v = array[i];
+    for (const c of combinations(array, n - 1, i + 1)) {
+      yield [v, ...c];
+    }
+  }
+};
