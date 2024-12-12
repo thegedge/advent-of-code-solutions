@@ -13,7 +13,7 @@ export const sumOf = <T,>(arr: T[], fn: (item: T, index: number) => bigint): big
 
 export const countBy = <T extends SimpleLiteral, V extends SimpleLiteral>(
   iterable: Iterable<T>,
-  selector: (element: T, index: number) => V
+  selector: (element: T, index: number) => V,
 ): Map<V, number> => {
   let index = 0;
   const result = new Map<V, number>();
