@@ -21,8 +21,12 @@ export const findCoords = <T,>(map: Map<T>, value: T): Coords | null => {
   return null;
 };
 
+export const withinBounds = (data: unknown[][], row: number, col: number) => {
+  return row >= 0 && col >= 0 && row < data.length && col < data[row].length;
+};
+
 export const validCoords = <T,>(map: Map<T>, coords: Coords[]) => {
-  return coords.filter(([row, col]) => row >= 0 && col >= 0 && row < map.data.length && col < map.data[row].length);
+  return coords.filter(([row, col]) => withinBounds(map.data, row, col));
 };
 
 /** Breadth-first search */
