@@ -1,4 +1,4 @@
-import { max, min } from "./utils.mts";
+import { max, min } from "./math.mts";
 
 export class Range {
   public readonly length: number;
