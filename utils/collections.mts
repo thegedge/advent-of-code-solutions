@@ -7,8 +7,14 @@ export const range = (n: number): number[] => {
   return [...Array(n).keys()];
 };
 
-export const sumOf = <T,>(arr: T[], fn: (item: T, index: number) => bigint): bigint => {
-  return arr.reduce((sum, item, index) => sum + fn(item, index), 0n);
+export const sumOf = <T,>(iterable: Iterable<T>, fn: (item: T, index: number) => bigint): bigint => {
+  let sum = 0n;
+  let index = 0;
+  for (const item of iterable) {
+    sum += fn(item, index);
+    index += 1;
+  }
+  return sum;
 };
 
 export const countBy = <T extends SimpleLiteral, V extends SimpleLiteral>(
