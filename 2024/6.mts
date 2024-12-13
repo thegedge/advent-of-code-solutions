@@ -35,7 +35,7 @@ const DIRECTIONS = [
 
 const canMove = (map: unknown[][], row: number, col: number, direction: number) => {
   const [deltaCol, deltaRow] = DIRECTIONS[direction];
-  if (!withinBounds(map, row + deltaRow, col + deltaCol)) {
+  if (!withinBounds(map, [row + deltaRow, col + deltaCol])) {
     // Allow the guard to move off the map
     return true;
   }
@@ -52,7 +52,7 @@ const solve = ({ startRow, startCol, map }: ReturnType<typeof readData>) => {
   let col = startCol;
   let row = startRow;
   let distinctCount = 0;
-  while (withinBounds(map, row, col)) {
+  while (withinBounds(map, [row, col])) {
     if (map[row][col]!.includes(direction)) {
       // This is another sentinel condition. If we find ourselves on a map tile that we've already
       // traversed in the same direction, we're in a loop.

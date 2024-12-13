@@ -34,7 +34,7 @@ const countAntinodes = ({ positions, mapData }: ReturnType<typeof readData>, ite
 
       let possibleAntinodeRow = row1 - rowDelta;
       let possibleAntinodeCol = col1 - colDelta;
-      for (let iteration = 0; iteration < iterations && withinBounds(mapData, possibleAntinodeRow, possibleAntinodeCol); iteration++) {
+      for (let iteration = 0; iteration < iterations && withinBounds(mapData, [possibleAntinodeRow, possibleAntinodeCol]); iteration++) {
         antiNodes.add(`${possibleAntinodeRow},${possibleAntinodeCol}`);
         possibleAntinodeRow -= rowDelta;
         possibleAntinodeCol -= colDelta;
@@ -42,7 +42,7 @@ const countAntinodes = ({ positions, mapData }: ReturnType<typeof readData>, ite
 
       possibleAntinodeRow = row2 + rowDelta;
       possibleAntinodeCol = col2 + colDelta;
-      for (let iteration = 0; iteration < iterations && withinBounds(mapData, possibleAntinodeRow, possibleAntinodeCol); iteration++) {
+      for (let iteration = 0; iteration < iterations && withinBounds(mapData, [possibleAntinodeRow, possibleAntinodeCol]); iteration++) {
         antiNodes.add(`${possibleAntinodeRow},${possibleAntinodeCol}`);
         possibleAntinodeRow += rowDelta;
         possibleAntinodeCol += colDelta;

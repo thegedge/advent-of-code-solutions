@@ -1,7 +1,8 @@
-export type Coords = [number, number];
-export type Map<T> = {
+export type Coordinate = [number, number];
+
+export abstract class Map<T> {
   /** The map data */
-  data: T[][];
+  constructor(readonly data: T[][]) {}
 
   /**
    * A function to compute the neighbours at the given position
@@ -11,42 +12,76 @@ export type Map<T> = {
    *
    * If coordinates need to wrap around edges, this should be done within the function.
    */
-  neighbours: (map: Map<T>, row: number, col: number) => Coords[];
-};
+  protected abstract neighboursFor(coord: Coordinate): Coordinate[];
 
-export const dumpMapData = <T,>(map: T[][], options?: { sep?: string; empty?: string; stringify?: (v: T) => string }) => {
-  const { sep = " ", empty = ".", stringify = String } = options ?? {};
-  return map.map((row) => row.map((v) => (v == null ? empty : stringify(v))).join(sep)).join("\n");
-};
-
-export const findCoords = <T,>(map: Map<T>, value: T): Coords | null => {
-  for (let row = 0; row < map.data.length; ++row) {
-    for (let col = 0; col < map.data[row].length; ++col) {
-      if (map.data[row][col] === value) {
-        return [row, col];
-      }
-    }
+  /**
+   * Filters the given set of coordinates to only those that are valid.
+   */
+  neighbours(coord: Coordinate) {
+    return this.validCoords(this.neighboursFor(coord));
   }
 
-  return null;
-};
-
-export const findAllCoords = function* <T>(map: Map<T>, value: T): Generator<Coords> {
-  for (let row = 0; row < map.data.length; ++row) {
-    for (let col = 0; col < map.data[row].length; ++col) {
-      if (map.data[row][col] === value) {
-        yield [row, col];
+  /**
+   * Finds the coordinates in this map with the given value.
+   */
+  findCoords(value: T): Coordinate[] {
+    const coordinates: Coordinate[] = [];
+    for (let row = 0; row < this.data.length; ++row) {
+      for (let col = 0; col < this.data[row].length; ++col) {
+        if (this.data[row][col] === value) {
+          coordinates.push([row, col]);
+        }
       }
     }
+
+    return coordinates;
   }
+
+  /**
+   * Returns whether or not the given row/column are within the bounds of this map's data.
+   */
+  withinBounds(coord: Coordinate) {
+    return withinBounds(this.data, coord);
+  }
+
+  /**
+   * Filters the given set of coordinates to only those that are valid.
+   */
+  validCoords(coords: Coordinate[]) {
+    return coords.filter((coord) => this.withinBounds(coord));
+  }
+
+  /**
+   * Dumps this map to a string (for debugging)
+   */
+  dump(options?: { sep?: string; empty?: string; stringify?: (v: T) => string }) {
+    return dumpMapData(this.data, options);
+  }
+}
+
+/** Returns an array of coordinates that are North, East, South, and West (that order) of the given coordinate */
+export const cardinalDirections = ([row, col]: Coordinate): Coordinate[] => {
+  return [
+    [row + 1, col],
+    [row, col + 1],
+    [row - 1, col],
+    [row, col - 1],
+  ];
 };
 
-export const withinBounds = (data: unknown[][], row: number, col: number) => {
+/**
+ * Returns whether or not the given row/column are within the bounds of a given 2d array.
+ */
+export const withinBounds = (data: unknown[][], [row, col]: Coordinate) => {
   return row >= 0 && col >= 0 && row < data.length && col < data[row].length;
 };
 
-export const validCoords = <T,>(map: Map<T>, coords: Coords[]) => {
-  return coords.filter(([row, col]) => withinBounds(map.data, row, col));
+/**
+ * Dump a map to a string (for debugging)
+ */
+export const dumpMapData = <T,>(data: T[][], options?: { columnSeparator?: string; empty?: string; stringify?: (v: T) => string }) => {
+  const { columnSeparator = "", empty = ".", stringify = String } = options ?? {};
+  return data.map((row) => row.map((v) => (v == null ? empty : stringify(v))).join(columnSeparator)).join("\n");
 };
 
 /**
@@ -59,7 +94,7 @@ export const bfs = <T, R>(
   map: Map<T>,
   options: {
     process: (map: Map<T>, row: number, col: number, distance: number, processed: (R | null)[][]) => R;
-    startingCoords: Coords[];
+    startingCoords: Coordinate[];
   },
 ): (R | null)[][] => {
   const { process, startingCoords } = options;
@@ -69,7 +104,8 @@ export const bfs = <T, R>(
   const processed: (R | null)[][] = map.data.map((row) => row.map(() => null));
 
   for (let distance = 0; queue.length > 0; ++distance) {
-    queue.splice(0, queue.length).forEach(([row, col]) => {
+    queue.splice(0, queue.length).forEach((coord) => {
+      const [row, col] = coord;
       const key = `${row},${col}`;
       if (visited.has(key)) {
         return;
@@ -78,8 +114,8 @@ export const bfs = <T, R>(
 
       processed[row][col] = process(map, row, col, distance, processed);
 
-      const next = map.neighbours(map, row, col);
-      queue.push(...validCoords(map, next));
+      const next = map.neighbours(coord);
+      queue.push(...next);
     });
   }
 
@@ -96,7 +132,7 @@ export const dfs = <T, R>(
   map: Map<T>,
   options: {
     process: (map: Map<T>, row: number, col: number, distance: number, processed: (R | null)[][]) => R;
-    startingCoords: Coords[];
+    startingCoords: Coordinate[];
   },
 ): (R | null)[][] => {
   const { process, startingCoords } = options;
@@ -118,9 +154,9 @@ export const dfs = <T, R>(
 
         visited.add(key);
         return true;
-      }).flatMap(([row, col]) => {
-        const next = map.neighbours(map, row, col);
-        return validCoords(map, next);
+      }).flatMap((coord) => {
+        const next = map.neighbours(coord);
+        return map.validCoords(next);
       }),
     );
     toVisit.push(nodes);
