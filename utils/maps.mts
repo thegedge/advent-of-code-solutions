@@ -116,6 +116,36 @@ export const dumpMapData = <T,>(data: T[][], options?: { columnSeparator?: strin
   return data.map((row) => row.map((v) => (v == null ? empty : stringify(v))).join(columnSeparator)).join("\n");
 };
 
+type Run = [start: number, length: number];
+
+/**
+ * Find horizontal runs in a grid.
+ *
+ * A run is any sequence of adjacent cells that have a truthy.
+ *
+ * @returns a mapping from the center of the run to its half-length
+ */
+export const findHorizontalRuns = (data: unknown[]): Run[] => {
+  const runs: Run[] = [];
+  let runStart: number | null = null;
+  for (let index = 0; index < data.length; ++index) {
+    if (data[index]) {
+      runStart ??= index;
+    } else if (runStart !== null) {
+      const length = index - runStart;
+      runs.push([runStart, length]);
+      runStart = null;
+    }
+  }
+  return runs;
+};
+
+/**
+ * Breadth-first search, with a default processed value.
+ *
+ * Good general purpose search algorithm. Can be used to find the shortest path between two points,
+ * inefficiently for long paths though.
+ */
 export function bfs<T, R, DPV>(
   map: Map<T>,
   options: {
@@ -124,6 +154,12 @@ export function bfs<T, R, DPV>(
     defaultProcessedValue: DPV;
   },
 ): (R | DPV)[][];
+/**
+ * Breadth-first search, where the default processed value is null.
+ *
+ * Good general purpose search algorithm. Can be used to find the shortest path between two points,
+ * inefficiently for long paths though.
+ */
 export function bfs<T, R>(
   map: Map<T>,
   options: {
