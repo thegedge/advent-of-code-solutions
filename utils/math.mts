@@ -52,3 +52,42 @@ export const min = <T extends bigint | number>(a: T, b: T): T => {
 export const max = <T extends bigint | number>(a: T, b: T): T => {
   return a > b ? a : b;
 };
+
+/**
+ * Solve a system of two linear equations in two variables (integers).
+ *
+ * The equations are of the form:
+ *   a * x + b * y = c
+ *   d * x + e * y = f
+ */
+export const solveSystem = (a: bigint, b: bigint, c: bigint, d: bigint, e: bigint, f: bigint): [bigint, bigint] | null => {
+  // We can solve this system by rearranging the first equation for x:
+  //   x = (c - b * y) / a
+  //
+  // Then substitute into the second equation:
+  //   f = d * ((c - b * y) / a) + e * y
+  //
+  // And rearrange for y:
+  //   a * f = d * (c - b * y) + e * a * y
+  //   a * f = d * c - d * b * y + e * a * y
+  //   a * f = d * c + y * (e * a - d * b)
+  //   y = (a * f - d * c) / (e * a - d * b)
+  //
+  // Once we have y, we can substitute back into the first equation to get x.
+  //   x = (c - b * y) / a
+
+  // No (finite) solution
+  if (a == 0n || b == 0n || e * a - d * b == 0n) {
+    return null;
+  }
+
+  const y = (a * f - d * c) / (e * a - d * b);
+  const x = (c - b * y) / a;
+
+  // No integer solution
+  if (a * x + b * y != c || d * x + e * y != f) {
+    return null;
+  }
+
+  return [x, y];
+};
