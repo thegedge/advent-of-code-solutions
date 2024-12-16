@@ -38,6 +38,17 @@ export abstract class Map<T> {
   }
 
   /**
+   * Run a function for each value in this map.
+   */
+  forEach(callback: (value: T, coord: Coordinate) => void) {
+    for (let row = 0; row < this.data.length; ++row) {
+      for (let col = 0; col < this.data[row].length; ++col) {
+        callback(this.data[row][col], [row, col]);
+      }
+    }
+  }
+
+  /**
    * Returns whether or not the given row/column are within the bounds of this map's data.
    */
   withinBounds(coord: Coordinate) {
