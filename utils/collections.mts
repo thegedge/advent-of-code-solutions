@@ -35,6 +35,10 @@ export const replaceAll = <T,>(arr: T[], target: T, replacement: T): T[] => {
   return arr.map((v) => (v === target ? replacement : v));
 };
 
+export const transpose = <T,>(matrix: T[][]): T[][] => {
+  return matrix[0].map((_, i) => matrix.map((row) => row[i]));
+};
+
 export const minMap = <T, R extends number | bigint>(arr: T[], fn: (item: T, index: number) => R): R | null => {
   return arr.reduce((min, item, index) => {
     const value = fn(item, index);

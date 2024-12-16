@@ -70,13 +70,34 @@ export abstract class Map<T> {
   }
 }
 
-/** Returns an array of coordinates that are North, East, South, and West (that order) of the given coordinate */
+/** Returns an array of coordinates in the cardinal directions of the given coordinate.
+ *
+ * The returned coordinates are ordered North, East, South, and West.
+ */
 export const cardinalDirections = ([row, col]: Coordinate): Coordinate[] => {
   return [
-    [row + 1, col],
-    [row, col + 1],
     [row - 1, col],
+    [row, col + 1],
+    [row + 1, col],
     [row, col - 1],
+  ];
+};
+
+/**
+ * Returns an array of coordinates that surround the given coordinate.
+ *
+ * The returned coordinates start at the topleft and proceed clockwise.
+ */
+export const surroundingDirections = ([row, col]: Coordinate): Coordinate[] => {
+  return [
+    [row - 1, col - 1],
+    [row - 1, col],
+    [row - 1, col + 1],
+    [row, col - 1],
+    [row, col + 1],
+    [row + 1, col - 1],
+    [row + 1, col],
+    [row + 1, col + 1],
   ];
 };
 
@@ -95,24 +116,40 @@ export const dumpMapData = <T,>(data: T[][], options?: { columnSeparator?: strin
   return data.map((row) => row.map((v) => (v == null ? empty : stringify(v))).join(columnSeparator)).join("\n");
 };
 
+export function bfs<T, R, DPV>(
+  map: Map<T>,
+  options: {
+    process: (map: Map<T>, row: number, col: number, distance: number, processed: (R | DPV)[][]) => R;
+    startingCoords: Coordinate[];
+    defaultProcessedValue: DPV;
+  },
+): (R | DPV)[][];
+export function bfs<T, R>(
+  map: Map<T>,
+  options: {
+    process: (map: Map<T>, row: number, col: number, distance: number, processed: (R | null)[][]) => R;
+    startingCoords: Coordinate[];
+  },
+): (R | null)[][];
 /**
  * Breadth-first search
  *
  * Good general purpose search algorithm. Can be used to find the shortest path between two points,
  * inefficiently for long paths though.
  */
-export const bfs = <T, R>(
+export function bfs<T, R, DPV>(
   map: Map<T>,
   options: {
-    process: (map: Map<T>, row: number, col: number, distance: number, processed: (R | null)[][]) => R;
+    process: (map: Map<T>, row: number, col: number, distance: number, processed: (R | DPV | null)[][]) => R;
     startingCoords: Coordinate[];
+    defaultProcessedValue?: DPV;
   },
-): (R | null)[][] => {
-  const { process, startingCoords } = options;
+): (R | DPV | null)[][] {
+  const { process, startingCoords, defaultProcessedValue = null } = options;
 
   const visited = new Set<string>();
   const queue: [number, number][] = [...startingCoords];
-  const processed: (R | null)[][] = map.data.map((row) => row.map(() => null));
+  const processed: (R | DPV | null)[][] = map.data.map((row) => row.map(() => defaultProcessedValue));
 
   for (let distance = 0; queue.length > 0; ++distance) {
     queue.splice(0, queue.length).forEach((coord) => {
@@ -131,7 +168,7 @@ export const bfs = <T, R>(
   }
 
   return processed;
-};
+}
 
 /**
  * Depth-first search.
