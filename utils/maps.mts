@@ -1,24 +1,64 @@
 export type Coordinate = [number, number];
+export type Primitive = string | number | boolean | bigint | boolean | symbol | null | undefined;
 
-export abstract class Map<T> {
+/**
+ * A map interface for pathfinding algorithms.
+ *
+ * @template ValueT the type of value stored in the map for a given node.
+ * @template NodeT the type for identifying a node
+ * @template DistanceT the type representing the distance between two nodes
+ */
+export interface IMap<ValueT, NodeT, KeyT extends Primitive, DistanceT = number> {
+  /**
+   * Get the valid neighbours for a given node
+   */
+  valueAt(node: NodeT): ValueT;
+
+  /**
+   * Convert the node into a representation that can be stored in a {@linkcode Map}
+   */
+  keyFor(node: NodeT): KeyT;
+
+  /**
+   * Convert the key-ified representation back into a `NodeT`
+   */
+  nodeFor(key: KeyT): NodeT;
+
+  /**
+   * Get the distance between two nodes.
+   */
+  distance(a: NodeT, b: NodeT): DistanceT;
+
+  /**
+   * Get the valid neighbours for a given node
+   */
+  neighbours(node: NodeT): NodeT[];
+}
+
+export class GridMap<T> implements IMap<T, Coordinate, number> {
   /** The map data */
   constructor(readonly data: T[][]) {}
 
-  /**
-   * A function to compute the neighbours at the given position
-   *
-   * The function can produce invalid coordinates (i.e., outside the map bounds). The underlying map functions
-   * will ensure only valid coordinates are used.
-   *
-   * If coordinates need to wrap around edges, this should be done within the function.
-   */
-  protected abstract neighboursFor(coord: Coordinate): Coordinate[];
+  // IMap implementation
 
-  /**
-   * Filters the given set of coordinates to only those that are valid.
-   */
-  neighbours(coord: Coordinate) {
-    return this.validCoords(this.neighboursFor(coord));
+  valueAt(coord: Coordinate): T {
+    return this.data[coord[0]][coord[1]];
+  }
+
+  keyFor(coord: Coordinate): number {
+    return this.data.length * coord[0] + coord[1];
+  }
+
+  nodeFor(key: number): Coordinate {
+    return [Math.floor(key / this.data.length), key % this.data.length];
+  }
+
+  distance(a: Coordinate, b: Coordinate): number {
+    return Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]);
+  }
+
+  neighbours(coord: Coordinate): Coordinate[] {
+    return cardinalDirections(coord).filter((coord) => this.withinBounds(coord));
   }
 
   /**
@@ -141,116 +181,57 @@ export const findHorizontalRuns = (data: unknown[]): Run[] => {
 };
 
 /**
- * Breadth-first search, with a default processed value.
- *
- * Good general purpose search algorithm. Can be used to find the shortest path between two points,
- * inefficiently for long paths though.
- */
-export function bfs<T, R, DPV>(
-  map: Map<T>,
-  options: {
-    process: (map: Map<T>, row: number, col: number, distance: number, processed: (R | DPV)[][]) => R;
-    startingCoords: Coordinate[];
-    defaultProcessedValue: DPV;
-  },
-): (R | DPV)[][];
-/**
- * Breadth-first search, where the default processed value is null.
- *
- * Good general purpose search algorithm. Can be used to find the shortest path between two points,
- * inefficiently for long paths though.
- */
-export function bfs<T, R>(
-  map: Map<T>,
-  options: {
-    process: (map: Map<T>, row: number, col: number, distance: number, processed: (R | null)[][]) => R;
-    startingCoords: Coordinate[];
-  },
-): (R | null)[][];
-/**
  * Breadth-first search
  *
- * Good general purpose search algorithm. Can be used to find the shortest path between two points,
- * inefficiently for long paths though.
+ * Good general purpose search algorithm.
+ *
+ * Can be used to find the shortest path between two points if the distance between nodes
+ * is always 1. In theory, capable of doing so otherwise, but hasn't been built for that.
+ *
+ * @returns a mapping from the node to the shortest distance to that node
  */
-export function bfs<T, R, DPV>(
-  map: Map<T>,
+export function bfs<ValueT, NodeT, KeyT extends Primitive>(
+  map: IMap<ValueT, NodeT, KeyT, number>,
   options: {
-    process: (map: Map<T>, row: number, col: number, distance: number, processed: (R | DPV | null)[][]) => R;
-    startingCoords: Coordinate[];
-    defaultProcessedValue?: DPV;
+    /** The nodes to start expanding from */
+    startingNodes: NodeT[];
+
+    /** Callback function for when we visit a node */
+    process?: (map: IMap<ValueT, NodeT, KeyT, number>, node: NodeT, distance: number) => void;
+
+    /**
+     * If `true`, keep visiting nodes regardless of whether or not they were previously visited.
+     *
+     * **DANGER** only set to `true` if the map is acyclic, otherwise you'll get an infinite loop.
+     *
+     * @default false
+     */
+    ignoreVisited?: boolean;
   },
-): (R | DPV | null)[][] {
-  const { process, startingCoords, defaultProcessedValue = null } = options;
+): Map<KeyT, number> {
+  const { process, startingNodes, ignoreVisited = false } = options;
 
-  const visited = new Set<string>();
-  const queue: [number, number][] = [...startingCoords];
-  const processed: (R | DPV | null)[][] = map.data.map((row) => row.map(() => defaultProcessedValue));
+  const visited = new Map<KeyT, number>();
+  const queue: [NodeT, number][] = startingNodes.map((n) => [n, 0]);
 
-  for (let distance = 0; queue.length > 0; ++distance) {
-    queue.splice(0, queue.length).forEach((coord) => {
-      const [row, col] = coord;
-      const key = `${row},${col}`;
-      if (visited.has(key)) {
+  while (queue.length > 0) {
+    queue.splice(0, queue.length).forEach(([node, distance]) => {
+      const key = map.keyFor(node);
+      const currentDistance = visited.get(key);
+      if (!ignoreVisited && currentDistance !== undefined) {
+        visited.set(key, Math.min(currentDistance, distance));
         return;
       }
-      visited.add(key);
 
-      processed[row][col] = process(map, row, col, distance, processed);
+      visited.set(key, distance);
+      process?.(map, node, distance);
 
-      const next = map.neighbours(coord);
-      queue.push(...next);
+      const next = map.neighbours(node);
+      queue.push(...next.map((neighbour): [NodeT, number] => {
+        return [neighbour, distance + map.distance(node, neighbour)];
+      }));
     });
   }
 
-  return processed;
+  return visited;
 }
-
-/**
- * Depth-first search.
- *
- * Useful for computing multiple distinct paths by backtracking, since the Nth path to some node will
- * have access to the computations of the (N-1) previous paths to reach a node.
- */
-export const dfs = <T, R>(
-  map: Map<T>,
-  options: {
-    process: (map: Map<T>, row: number, col: number, distance: number, processed: (R | null)[][]) => R;
-    startingCoords: Coordinate[];
-  },
-): (R | null)[][] => {
-  const { process, startingCoords } = options;
-
-  const visited = new Set<string>();
-  const queue: [number, number][] = [...startingCoords];
-  const toVisit: [number, number][][] = [];
-  const processed: (R | null)[][] = map.data.map((row) => row.map(() => null));
-
-  while (queue.length > 0) {
-    const nodes = queue.splice(
-      0,
-      queue.length,
-      ...queue.filter(([row, col]) => {
-        const key = `${row},${col}`;
-        if (visited.has(key)) {
-          return false;
-        }
-
-        visited.add(key);
-        return true;
-      }).flatMap((coord) => {
-        const next = map.neighbours(coord);
-        return map.validCoords(next);
-      }),
-    );
-    toVisit.push(nodes);
-  }
-
-  for (let distance = toVisit.length - 1; distance >= 0; --distance) {
-    for (const [row, col] of toVisit[distance]) {
-      processed[row][col] = process(map, row, col, distance, processed);
-    }
-  }
-
-  return processed;
-};

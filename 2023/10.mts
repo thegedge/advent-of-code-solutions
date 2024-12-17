@@ -1,5 +1,6 @@
-import { bfs, cardinalDirections, Coordinate, Map } from "../utils/maps.mts";
-import { nonNil } from "../utils/utility.mts";
+import { maxOf } from "std/collections/mod.ts";
+import { bfs, cardinalDirections, Coordinate, GridMap } from "../utils/maps.mts";
+import { id } from "../utils/utility.mts";
 
 const groups = (
   await Deno.readTextFile(
@@ -11,8 +12,8 @@ const readData = (data: string) => {
   return new ProblemTenMap(data.split("\n").map((line) => line.split("")));
 };
 
-class ProblemTenMap extends Map<string> {
-  neighboursFor([row, col]: Coordinate): Coordinate[] {
+class ProblemTenMap extends GridMap<string> {
+  override neighbours([row, col]: Coordinate): Coordinate[] {
     const value = this.data[row][col];
     switch (value) {
       case ".":
@@ -20,7 +21,7 @@ class ProblemTenMap extends Map<string> {
       case "S": {
         const positions: Coordinate[] = [];
         for (const coord of this.validCoords(cardinalDirections([row, col]))) {
-          const coords = this.validCoords(this.neighboursFor(coord));
+          const coords = this.neighbours(coord);
           if (coords.some(([r, c]) => this.data[r][c] === "S")) {
             positions.push(coord);
           }
@@ -65,14 +66,11 @@ class ProblemTenMap extends Map<string> {
 
 const solvePart1 = () => {
   const results = groups.map(readData).map((map) => {
-    const startingCoords = map.findCoords("S");
-    const distances = bfs(map, {
-      startingCoords,
-      process: (_m, _r, _c, distance) => distance,
-    });
+    const startingNodes = map.findCoords("S");
+    const distances = bfs(map, { startingNodes });
     // console.log(dumpMapData(distances));
     // console.log();
-    return Math.max(...distances.map((row) => Math.max(...row.filter(nonNil))));
+    return maxOf(Array.from(distances.values()), id);
   });
 
   console.log(results);
@@ -82,10 +80,9 @@ const solvePart2 = () => {
   // TODO not sure how to solve this one immediately, moving on!
 
   const results = groups.map(readData).map((map) => {
-    const startingCoords = map.findCoords("S")!;
+    const startingNodes = map.findCoords("S")!;
     const loop = bfs(map, {
-      startingCoords,
-      process: (m, r, c) => m.data[r][c],
+      startingNodes,
     });
 
     // console.log(dumpMapData(loop, { stringify: (v) => (v == null ? "x" : v) }));

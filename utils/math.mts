@@ -49,6 +49,17 @@ export const min = <T extends bigint | number>(a: T, b: T): T => {
   return a < b ? a : b;
 };
 
+/**
+ * Computes the modulo (v % n) as per the mathematical definition (i.e. always positive).
+ */
+export const mod = (v: number, n: number): number => {
+  const value = v % n;
+  if (value < 0) {
+    return value + n;
+  }
+  return value;
+};
+
 export const max = <T extends bigint | number>(a: T, b: T): T => {
   return a > b ? a : b;
 };

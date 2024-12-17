@@ -1,4 +1,4 @@
-import { cardinalDirections, type Coordinate, Map } from "../utils/maps.mts";
+import { cardinalDirections, type Coordinate, GridMap } from "../utils/maps.mts";
 
 const groups = (await Deno.readTextFile(new URL("", import.meta.url.replace(".mts", ".in")).pathname)).split("\n---\n");
 
@@ -24,8 +24,8 @@ const readData = (data: string) => {
   };
 };
 
-class RobotMap extends Map<string> {
-  protected override neighboursFor(coord: Coordinate): Coordinate[] {
+class RobotMap extends GridMap<string> {
+  override neighboursFor(coord: Coordinate): Coordinate[] {
     return cardinalDirections(coord);
   }
 }

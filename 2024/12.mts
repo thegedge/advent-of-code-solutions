@@ -1,5 +1,5 @@
 import { transpose } from "../utils/collections.mts";
-import { bfs, type Coordinate, Map } from "../utils/maps.mts";
+import { bfs, cardinalDirections, type Coordinate, GridMap } from "../utils/maps.mts";
 
 const groups = (await Deno.readTextFile(new URL("", import.meta.url.replace(".mts", ".in")).pathname)).split("\n\n");
 
@@ -7,16 +7,11 @@ const readData = (data: string) => {
   return new Garden(data.split("\n").map((line) => line.split("")));
 };
 
-class Garden extends Map<string | null> {
-  neighboursFor([row, col]: Coordinate): Coordinate[] {
+class Garden extends GridMap<string | null> {
+  override neighbours([row, col]: Coordinate): Coordinate[] {
     const currentValue = this.data[row][col];
 
-    return ([
-      [row - 1, col],
-      [row + 1, col],
-      [row, col - 1],
-      [row, col + 1],
-    ] as Coordinate[]).filter((coord) => this.withinBounds(coord)).filter(([row, col]) => {
+    return cardinalDirections([row, col]).filter((coord) => this.withinBounds(coord)).filter(([row, col]) => {
       const value = this.data[row][col];
       return currentValue === value;
     });
@@ -26,22 +21,19 @@ class Garden extends Map<string | null> {
 const floodFillPerimeter = (garden: Garden, coord: Coordinate) => {
   let area = 0;
   let perimeter = 0;
-  const processed = bfs(garden, {
-    startingCoords: [coord],
-    process: (garden, row, col) => {
+  const visited = bfs(garden, {
+    startingNodes: [coord],
+    process: (map, node) => {
       area += 1;
-      perimeter += 4 - garden.neighbours([row, col]).length;
+      perimeter += 4 - map.neighbours(node).length;
       return true;
     },
   });
 
   // Null out the plot that we just found so a future `floodFill` call won't include it
-  processed.forEach((row, rowIndex) => {
-    row.forEach((value, colIndex) => {
-      if (value) {
-        garden.data[rowIndex][colIndex] = null;
-      }
-    });
+  visited.forEach((_distance, key) => {
+    const [row, col] = garden.nodeFor(key);
+    garden.data[row][col] = null;
   });
 
   return { area, perimeter };
@@ -100,22 +92,21 @@ const countDistinctVerticalSides = (processed: boolean[][]) => {
 
 const floodFillSides = (garden: Garden, coord: Coordinate) => {
   let area = 0;
-  const processed = bfs(garden, {
-    startingCoords: [coord],
-    defaultProcessedValue: false,
+  const visited = bfs(garden, {
+    startingNodes: [coord],
     process: (_garden, _row, _col) => {
       area += 1;
       return true;
     },
   });
 
+  const processed = garden.data.map((row) => row.map((_) => false));
+
   // Null out the plot that we just found so a future `floodFill` call won't include it
-  processed.forEach((row, rowIndex) => {
-    row.forEach((value, colIndex) => {
-      if (value) {
-        garden.data[rowIndex][colIndex] = null;
-      }
-    });
+  visited.forEach((_distance, key) => {
+    const [row, col] = garden.nodeFor(key);
+    garden.data[row][col] = null;
+    processed[row][col] = true;
   });
 
   // Count the sides for the plot.
