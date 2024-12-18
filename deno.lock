@@ -1,6 +1,8 @@
 {
-  "version": "2",
+  "version": "4",
   "remote": {
+    "https://deno.land/std@0.177.0/collections/_comparators.ts": "fa7f9a44cea1d270098a2a5a6f8bb30c61b595c1b1f983bd67c6297d766adffa",
+    "https://deno.land/std@0.177.0/collections/binary_heap.ts": "9b526124c393e7ee02d1f329db471f75055b175a86d41c6856186107c8beffc8",
     "https://deno.land/std@0.210.0/collections/_utils.ts": "5114abc026ddef71207a79609b984614e66a63a4bda17d819d56b0e72c51527e",
     "https://deno.land/std@0.210.0/collections/aggregate_groups.ts": "2ed1698695e7b4877afa2281ad10ce3ce67395aa7479e98cc2ebb751add1c4e9",
     "https://deno.land/std@0.210.0/collections/associate_by.ts": "64869182eeed3be9222137d071224ac6a01bcc3c5236610306f99e3e3107ec47",

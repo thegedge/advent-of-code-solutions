@@ -1,4 +1,7 @@
-export type Coordinate = [number, number];
+import { BinaryHeap } from "https://deno.land/std@0.177.0/collections/binary_heap.ts";
+import { memoize } from "./utility.mts";
+
+export type Coordinate = readonly [row: number, col: number];
 export type Primitive = string | number | boolean | bigint | boolean | symbol | null | undefined;
 
 /**
@@ -8,7 +11,12 @@ export type Primitive = string | number | boolean | bigint | boolean | symbol | 
  * @template NodeT the type for identifying a node
  * @template DistanceT the type representing the distance between two nodes
  */
-export interface IMap<ValueT, NodeT, KeyT extends Primitive, DistanceT = number> {
+export interface Graph<ValueT, NodeT, KeyT extends Primitive, DistanceT = number> {
+  /**
+   * Return all nodes in this map.
+   */
+  nodes(): NodeT[];
+
   /**
    * Get the valid neighbours for a given node
    */
@@ -35,18 +43,22 @@ export interface IMap<ValueT, NodeT, KeyT extends Primitive, DistanceT = number>
   neighbours(node: NodeT): NodeT[];
 }
 
-export class GridMap<T> implements IMap<T, Coordinate, number> {
+export class GridMap<T> implements Graph<T, Coordinate, number> {
   /** The map data */
   constructor(readonly data: T[][]) {}
 
   // IMap implementation
+
+  nodes(): Coordinate[] {
+    return this.data.flatMap((row, rowIndex) => row.map((_, colIndex) => [rowIndex, colIndex] as const));
+  }
 
   valueAt(coord: Coordinate): T {
     return this.data[coord[0]][coord[1]];
   }
 
   keyFor(coord: Coordinate): number {
-    return this.data.length * coord[0] + coord[1];
+    return this.data[0].length * coord[0] + coord[1];
   }
 
   nodeFor(key: number): Coordinate {
@@ -109,6 +121,75 @@ export class GridMap<T> implements IMap<T, Coordinate, number> {
     return dumpMapData(this.data, options);
   }
 }
+
+export const enum Direction {
+  North = 0,
+  East,
+  South,
+  West,
+}
+
+export const DIRECTIONS = [Direction.North, Direction.East, Direction.South, Direction.West];
+
+/**
+ * Return a row/column delta for the given direction.
+ */
+export const directionDelta = (direction: Direction): Coordinate => {
+  switch (direction) {
+    case Direction.North:
+      return [-1, 0];
+    case Direction.East:
+      return [0, 1];
+    case Direction.South:
+      return [1, 0];
+    case Direction.West:
+      return [0, -1];
+  }
+};
+
+/**
+ * Return the direction clockwise from a given direction.
+ */
+export const clockwise = (direction: Direction): Direction => {
+  switch (direction) {
+    case Direction.North:
+      return Direction.East;
+    case Direction.East:
+      return Direction.South;
+    case Direction.South:
+      return Direction.West;
+    case Direction.West:
+      return Direction.North;
+  }
+};
+
+export const numTurns = memoize((from: Direction, to: Direction): number => {
+  let numTurns = 0;
+  let dir1 = from;
+  let dir2 = from;
+  while (dir1 !== to && dir2 !== to) {
+    dir1 = clockwise(dir1);
+    dir2 = counterClockwise(dir2);
+    numTurns += 1;
+  }
+  return numTurns;
+});
+
+/**
+ * Return the direction counterclockwise from a given direction.
+ */
+export const counterClockwise = (direction: Direction): Direction => {
+  switch (direction) {
+    case Direction.North:
+      return Direction.West;
+    case Direction.West:
+      return Direction.South;
+    case Direction.South:
+      return Direction.East;
+    case Direction.East:
+      return Direction.North;
+  }
+};
 
 /** Returns an array of coordinates in the cardinal directions of the given coordinate.
  *
@@ -191,13 +272,13 @@ export const findHorizontalRuns = (data: unknown[]): Run[] => {
  * @returns a mapping from the node to the shortest distance to that node
  */
 export function bfs<ValueT, NodeT, KeyT extends Primitive>(
-  map: IMap<ValueT, NodeT, KeyT, number>,
+  map: Graph<ValueT, NodeT, KeyT, number>,
   options: {
     /** The nodes to start expanding from */
     startingNodes: NodeT[];
 
     /** Callback function for when we visit a node */
-    process?: (map: IMap<ValueT, NodeT, KeyT, number>, node: NodeT, distance: number) => void;
+    process?: (map: Graph<ValueT, NodeT, KeyT, number>, node: NodeT, distance: number) => void;
 
     /**
      * If `true`, keep visiting nodes regardless of whether or not they were previously visited.
@@ -235,3 +316,81 @@ export function bfs<ValueT, NodeT, KeyT extends Primitive>(
 
   return visited;
 }
+
+const UNVISITED = Symbol("UNVISITED");
+
+/**
+ * Dijkstra's algorithm to compute the shortest path between two nodes in a graph.
+ *
+ * Finds the shortest path between two nodes in a graph.
+ *
+ * @returns the shortest distance between the source and destination nodes, and the path to get there.
+ *   Order in this array is the same as the order of the destinations in the input.
+ */
+export const dijkstra = <ValueT, NodeT, KeyT extends Primitive>(
+  map: Graph<ValueT, NodeT, KeyT, number>,
+  options: {
+    /** The node to start from */
+    source: NodeT;
+
+    /** The nodes considered a destination */
+    destination: NodeT;
+  },
+): [number, NodeT[]] => {
+  const queue = new BinaryHeap((a: [NodeT, number], b: [NodeT, number]) => {
+    return a[1] < b[1] ? -1 : a[1] > b[1] ? 1 : 0;
+  });
+  const distances = new Map<KeyT, number>();
+  const previous = new Map<KeyT, NodeT | typeof UNVISITED>();
+  const sourceKey = map.keyFor(options.source);
+  const destinationKey = map.keyFor(options.destination);
+
+  queue.push([options.source, 0]);
+
+  for (const node of map.nodes()) {
+    const nodeKey = map.keyFor(node);
+    previous.set(nodeKey, UNVISITED);
+    distances.set(nodeKey, nodeKey === sourceKey ? 0 : Infinity);
+  }
+
+  while (queue.length > 0) {
+    const [node, distance] = queue.pop()!;
+    const nodeKey = map.keyFor(node);
+    const currentDistance = distances.get(nodeKey)!;
+    if (distance > currentDistance) {
+      continue;
+    }
+
+    if (destinationKey == nodeKey) {
+      break;
+    }
+
+    for (const neighbour of map.neighbours(node)) {
+      const neighbourKey = map.keyFor(neighbour);
+      const neighbourDistance = distance + map.distance(node, neighbour);
+      if (neighbourDistance < distances.get(neighbourKey)!) {
+        previous.set(neighbourKey, node);
+        distances.set(neighbourKey, neighbourDistance);
+        queue.push([neighbour, neighbourDistance]);
+      }
+    }
+  }
+
+  const destKey = destinationKey;
+  const path = [];
+  let currentKey = destKey;
+  let currentNode = options.destination;
+  while (currentKey !== sourceKey) {
+    path.push(currentNode);
+
+    const nextNode = previous.get(currentKey);
+    if (!nextNode || nextNode === UNVISITED) {
+      return [Infinity, []];
+    }
+
+    currentNode = nextNode;
+    currentKey = map.keyFor(nextNode);
+  }
+
+  return [distances.get(destKey) ?? Infinity, [options.source, ...path.reverse()]];
+};
