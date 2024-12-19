@@ -336,12 +336,12 @@ export const dijkstra = <ValueT, NodeT, KeyT extends Primitive>(
     /** The nodes considered a destination */
     destination: NodeT;
   },
-): [number, NodeT[]] => {
+): [number, NodeT[][]] => {
   const queue = new BinaryHeap((a: [NodeT, number], b: [NodeT, number]) => {
     return a[1] < b[1] ? -1 : a[1] > b[1] ? 1 : 0;
   });
   const distances = new Map<KeyT, number>();
-  const previous = new Map<KeyT, NodeT | typeof UNVISITED>();
+  const previous = new Map<KeyT, KeyT[] | typeof UNVISITED>();
   const sourceKey = map.keyFor(options.source);
   const destinationKey = map.keyFor(options.destination);
 
@@ -353,44 +353,90 @@ export const dijkstra = <ValueT, NodeT, KeyT extends Primitive>(
     distances.set(nodeKey, nodeKey === sourceKey ? 0 : Infinity);
   }
 
+  let shortestDistance = Infinity;
   while (queue.length > 0) {
     const [node, distance] = queue.pop()!;
     const nodeKey = map.keyFor(node);
+    if (destinationKey == nodeKey) {
+      shortestDistance = Math.min(shortestDistance, distance);
+      continue;
+    }
+
     const currentDistance = distances.get(nodeKey)!;
     if (distance > currentDistance) {
       continue;
     }
 
-    if (destinationKey == nodeKey) {
-      break;
-    }
-
     for (const neighbour of map.neighbours(node)) {
       const neighbourKey = map.keyFor(neighbour);
-      const neighbourDistance = distance + map.distance(node, neighbour);
-      if (neighbourDistance < distances.get(neighbourKey)!) {
-        previous.set(neighbourKey, node);
-        distances.set(neighbourKey, neighbourDistance);
-        queue.push([neighbour, neighbourDistance]);
+      const newDistance = distance + map.distance(node, neighbour);
+      const currentDistance = distances.get(neighbourKey)!;
+      if (newDistance <= currentDistance) {
+        const previousNodes = previous.get(neighbourKey);
+        if (Array.isArray(previousNodes)) {
+          previousNodes.push(nodeKey);
+        } else {
+          previous.set(neighbourKey, [nodeKey]);
+        }
+
+        if (newDistance < currentDistance) {
+          distances.set(neighbourKey, newDistance);
+          queue.push([neighbour, newDistance]);
+        }
       }
     }
   }
 
-  const destKey = destinationKey;
-  const path = [];
-  let currentKey = destKey;
-  let currentNode = options.destination;
-  while (currentKey !== sourceKey) {
-    path.push(currentNode);
+  //   for (const [key, value] of previous) {
+  //     if (!Array.isArray(value)) {
+  //       continue;
+  //     }
+  //
+  //     console.log({
+  //       node: map.nodeFor(key),
+  //       previous: value.map((k) => map.nodeFor(k)),
+  //     });
+  //   }
 
-    const nextNode = previous.get(currentKey);
-    if (!nextNode || nextNode === UNVISITED) {
-      return [Infinity, []];
-    }
+  const paths: NodeT[][] = [];
+  const currentPaths: NodeT[][] = [[]];
+  const currentHeads = [options.destination];
+  const currentHeadKeys = [destinationKey];
+  while (currentHeads.length > 0) {
+    const headsCopy = currentHeads.splice(0);
+    const keysCopy = currentHeadKeys.splice(0);
+    const pathsCopy = currentPaths.splice(0);
+    keysCopy.forEach((key, index) => {
+      if (key == sourceKey) {
+        paths.push([...pathsCopy[index], options.source]);
+        return;
+      }
 
-    currentNode = nextNode;
-    currentKey = map.keyFor(nextNode);
+      const nextNodeKeys = previous.get(key);
+      if (!nextNodeKeys || nextNodeKeys === UNVISITED) {
+        return;
+      }
+
+      for (const headKey of nextNodeKeys) {
+        // console.log(map.nodeFor(key), map.nodeFor(headKey));
+        currentPaths.push([...pathsCopy[index], headsCopy[index]]);
+        currentHeads.push(map.nodeFor(headKey));
+        currentHeadKeys.push(headKey);
+      }
+    });
   }
 
-  return [distances.get(destKey) ?? Infinity, [options.source, ...path.reverse()]];
+  // There may be values in the previous map that aren't on the shortest path, so filter them out
+  const shortestPaths = paths.filter((p) => {
+    const pathLength = p.reduce((acc, node, index) => {
+      if (index === 0) {
+        return acc;
+      }
+
+      return acc + map.distance(p[index - 1], node);
+    }, 0);
+    return pathLength === shortestDistance;
+  });
+
+  return [distances.get(destinationKey) ?? Infinity, shortestPaths.map((p) => p.reverse())];
 };

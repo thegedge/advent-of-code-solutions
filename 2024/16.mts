@@ -66,14 +66,15 @@ const readData = (data: string) => {
 };
 
 const solvePart1 = () => {
-  const results = groups.map(readData).map((map) => {
+  const results = groups.map(readData).map((map, index) => {
+    const source: Node = [...map.findCoord("S")!, Direction.East];
     const dest = map.findCoord("E")!;
 
     // We can end up on the final destination facing any direction, so we'll try all of them and
     // take the smallest. Redundant, but worst-case complexity is the same.
     const results = DIRECTIONS.map((dir) =>
       dijkstra(map, {
-        source: [...map.findCoord("S")!, Direction.East],
+        source,
         destination: [...dest, dir],
       })
     );
@@ -86,7 +87,31 @@ const solvePart1 = () => {
 
 const solvePart2 = () => {
   const results = groups.map(readData).map((map) => {
-    //
+    const source: Node = [...map.findCoord("S")!, Direction.East];
+    const dest = map.findCoord("E")!;
+
+    // We can end up on the final destination facing any direction, so we'll try all of them and
+    // take the smallest. Redundant, but worst-case complexity is the same.
+    const results = DIRECTIONS.map((dir) =>
+      dijkstra<unknown, Node, number>(map, {
+        source,
+        destination: [...dest, dir],
+      })
+    );
+
+    const nodes = new Set<number>();
+    const shortest = Math.min(...results.map((result) => result[0]));
+    for (const result of results) {
+      if (result[0] === shortest) {
+        for (const path of result[1]) {
+          for (const node of path) {
+            nodes.add(map.keyFor(node) >> 2);
+          }
+        }
+      }
+    }
+
+    return nodes.size;
   });
 
   console.log(results);
