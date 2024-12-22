@@ -43,6 +43,11 @@ export interface Graph<ValueT, NodeT, KeyT extends Primitive, DistanceT = number
   neighbours(node: NodeT): NodeT[];
 }
 
+/**
+ * A map backed by a two-dimensional array.
+ *
+ * By default,
+ */
 export class GridMap<T> implements Graph<T, Coordinate, number> {
   /** The map data */
   constructor(readonly data: T[][]) {}
@@ -70,7 +75,7 @@ export class GridMap<T> implements Graph<T, Coordinate, number> {
   }
 
   neighbours(coord: Coordinate): Coordinate[] {
-    return cardinalDirections(coord).filter((coord) => this.withinBounds(coord));
+    return cardinalDirections(coord).filter((c) => this.validCoord(c));
   }
 
   /**
@@ -110,8 +115,8 @@ export class GridMap<T> implements Graph<T, Coordinate, number> {
   /**
    * Filters the given set of coordinates to only those that are valid.
    */
-  validCoords(coords: Coordinate[]) {
-    return coords.filter((coord) => this.withinBounds(coord));
+  validCoord(coord: Coordinate) {
+    return this.withinBounds(coord);
   }
 
   /**
@@ -319,6 +324,30 @@ export function bfs<ValueT, NodeT, KeyT extends Primitive>(
 
 const UNVISITED = Symbol("UNVISITED");
 
+export function dijkstra<ValueT, NodeT, KeyT extends Primitive>(
+  map: Graph<ValueT, NodeT, KeyT, number>,
+  options: {
+    source: NodeT;
+    destination: NodeT;
+    paths?: undefined;
+  },
+): number;
+export function dijkstra<ValueT, NodeT, KeyT extends Primitive>(
+  map: Graph<ValueT, NodeT, KeyT, number>,
+  options: {
+    source: NodeT;
+    destination: NodeT;
+    paths: "all";
+  },
+): [number, NodeT[][]];
+export function dijkstra<ValueT, NodeT, KeyT extends Primitive>(
+  map: Graph<ValueT, NodeT, KeyT, number>,
+  options: {
+    source: NodeT;
+    destination: NodeT;
+    paths: "any";
+  },
+): [number, NodeT[]];
 /**
  * Dijkstra's algorithm to compute the shortest path between two nodes in a graph.
  *
@@ -327,7 +356,7 @@ const UNVISITED = Symbol("UNVISITED");
  * @returns the shortest distance between the source and destination nodes, and the path to get there.
  *   Order in this array is the same as the order of the destinations in the input.
  */
-export const dijkstra = <ValueT, NodeT, KeyT extends Primitive>(
+export function dijkstra<ValueT, NodeT, KeyT extends Primitive>(
   map: Graph<ValueT, NodeT, KeyT, number>,
   options: {
     /** The node to start from */
@@ -335,8 +364,16 @@ export const dijkstra = <ValueT, NodeT, KeyT extends Primitive>(
 
     /** The nodes considered a destination */
     destination: NodeT;
+
+    /**
+     * Whether or not to also find paths.
+     *
+     * If `any`, find and return any shortest path between the source and destination.
+     * If `all`, find and return all shortest path between the source and destination.
+     */
+    paths?: "any" | "all";
   },
-): [number, NodeT[][]] => {
+): number | [number, NodeT[] | NodeT[][]] {
   const queue = new BinaryHeap((a: [NodeT, number], b: [NodeT, number]) => {
     return a[1] < b[1] ? -1 : a[1] > b[1] ? 1 : 0;
   });
@@ -387,17 +424,11 @@ export const dijkstra = <ValueT, NodeT, KeyT extends Primitive>(
     }
   }
 
-  //   for (const [key, value] of previous) {
-  //     if (!Array.isArray(value)) {
-  //       continue;
-  //     }
-  //
-  //     console.log({
-  //       node: map.nodeFor(key),
-  //       previous: value.map((k) => map.nodeFor(k)),
-  //     });
-  //   }
+  if (!options.paths) {
+    return distances.get(destinationKey) ?? Infinity;
+  }
 
+  const allPaths = options.paths === "all";
   const paths: NodeT[][] = [];
   const currentPaths: NodeT[][] = [[]];
   const currentHeads = [options.destination];
@@ -417,11 +448,16 @@ export const dijkstra = <ValueT, NodeT, KeyT extends Primitive>(
         return;
       }
 
-      for (const headKey of nextNodeKeys) {
-        // console.log(map.nodeFor(key), map.nodeFor(headKey));
-        currentPaths.push([...pathsCopy[index], headsCopy[index]]);
-        currentHeads.push(map.nodeFor(headKey));
-        currentHeadKeys.push(headKey);
+      currentPaths.push([...pathsCopy[index], headsCopy[index]]);
+      currentHeads.push(map.nodeFor(nextNodeKeys[0]));
+      currentHeadKeys.push(nextNodeKeys[0]);
+      if (allPaths) {
+        for (const headKey of nextNodeKeys.slice(1)) {
+          // console.log(map.nodeFor(key), map.nodeFor(headKey));
+          currentPaths.push([...pathsCopy[index], headsCopy[index]]);
+          currentHeads.push(map.nodeFor(headKey));
+          currentHeadKeys.push(headKey);
+        }
       }
     });
   }
@@ -436,7 +472,7 @@ export const dijkstra = <ValueT, NodeT, KeyT extends Primitive>(
       return acc + map.distance(p[index - 1], node);
     }, 0);
     return pathLength === shortestDistance;
-  });
+  }).map((p) => p.reverse());
 
-  return [distances.get(destinationKey) ?? Infinity, shortestPaths.map((p) => p.reverse())];
-};
+  return [distances.get(destinationKey) ?? Infinity, allPaths ? shortestPaths : (shortestPaths[0] ?? [])];
+}

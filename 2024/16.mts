@@ -76,6 +76,7 @@ const solvePart1 = () => {
       dijkstra(map, {
         source,
         destination: [...dest, dir],
+        paths: "any",
       })
     );
 
@@ -96,6 +97,7 @@ const solvePart2 = () => {
       dijkstra<unknown, Node, number>(map, {
         source,
         destination: [...dest, dir],
+        paths: "all",
       })
     );
 

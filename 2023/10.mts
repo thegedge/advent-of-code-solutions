@@ -1,5 +1,5 @@
 import { maxOf } from "std/collections/mod.ts";
-import { bfs, cardinalDirections, Coordinate, GridMap } from "../utils/maps.mts";
+import { bfs, Coordinate, GridMap } from "../utils/maps.mts";
 import { id } from "../utils/utility.mts";
 
 const groups = (
@@ -20,7 +20,7 @@ class ProblemTenMap extends GridMap<string> {
         return [];
       case "S": {
         const positions: Coordinate[] = [];
-        for (const coord of this.validCoords(cardinalDirections([row, col]))) {
+        for (const coord of super.neighbours([row, col])) {
           const coords = this.neighbours(coord);
           if (coords.some(([r, c]) => this.data[r][c] === "S")) {
             positions.push(coord);
