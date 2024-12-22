@@ -1,4 +1,5 @@
-import { sumOf } from "std/collections/sum_of.ts";
+import { sumOf } from "../utils/collections.mts";
+import { memoize } from "../utils/utility.mts";
 
 const groups = (await Deno.readTextFile(new URL("", import.meta.url.replace(".mts", ".in")).pathname)).split("\n---\n");
 
@@ -7,33 +8,34 @@ const readData = (data: string) => {
   return [patterns.split(", "), designs.split("\n")];
 };
 
+// 626857582097410 too low
+
+const search = memoize((design: string, patterns: string[]): bigint => {
+  if (design == "") {
+    return 1n;
+  }
+
+  return sumOf(patterns, (pattern) => {
+    if (design.startsWith(pattern)) {
+      return search(design.slice(pattern.length), patterns);
+    }
+    return 0n;
+  });
+});
+
 const solvePart1 = () => {
   const results = groups.map(readData).map(([patterns, designs]) => {
-    const search = (design: string) => {
-      if (design == "") {
-        return true;
-      }
-
-      for (const pattern of patterns) {
-        if (design.startsWith(pattern)) {
-          if (search(design.slice(pattern.length))) {
-            return true;
-          }
-        }
-      }
-
-      return false;
-    };
-
-    return sumOf(designs, (design) => search(design) ? 1 : 0);
+    return sumOf(designs, (design) => search(design, patterns) > 0n ? 1n : 0n);
   });
 
   console.log(results);
 };
 
 const solvePart2 = () => {
-  const results = groups.map(readData).map((group) => {
-    //
+  const results = groups.map(readData).map(([patterns, designs]) => {
+    return sumOf(designs, (design) => {
+      return search(design, patterns);
+    });
   });
 
   console.log(results);
