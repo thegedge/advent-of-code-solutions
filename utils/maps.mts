@@ -33,9 +33,9 @@ export interface Graph<ValueT, NodeT, KeyT extends Primitive, DistanceT = number
   nodeFor(key: KeyT): NodeT;
 
   /**
-   * Get the distance between two nodes.
+   * Get the weight of the edge between two nodes.
    */
-  distance(a: NodeT, b: NodeT): DistanceT;
+  edgeWeight(a: NodeT, b: NodeT): DistanceT;
 
   /**
    * Get the valid neighbours for a given node
@@ -70,7 +70,7 @@ export class GridMap<T> implements Graph<T, Coordinate, number> {
     return [Math.floor(key / this.data.length), key % this.data.length];
   }
 
-  distance(a: Coordinate, b: Coordinate): number {
+  edgeWeight(a: Coordinate, b: Coordinate): number {
     return Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]);
   }
 
@@ -314,7 +314,7 @@ export function bfs<ValueT, NodeT, KeyT extends Primitive>(
 
       const next = map.neighbours(node);
       queue.push(...next.map((neighbour): [NodeT, number] => {
-        return [neighbour, distance + map.distance(node, neighbour)];
+        return [neighbour, distance + map.edgeWeight(node, neighbour)];
       }));
     });
   }
@@ -406,7 +406,7 @@ export function dijkstra<ValueT, NodeT, KeyT extends Primitive>(
 
     for (const neighbour of map.neighbours(node)) {
       const neighbourKey = map.keyFor(neighbour);
-      const newDistance = distance + map.distance(node, neighbour);
+      const newDistance = distance + map.edgeWeight(node, neighbour);
       const currentDistance = distances.get(neighbourKey)!;
       if (newDistance <= currentDistance) {
         const previousNodes = previous.get(neighbourKey);
@@ -469,7 +469,7 @@ export function dijkstra<ValueT, NodeT, KeyT extends Primitive>(
         return acc;
       }
 
-      return acc + map.distance(p[index - 1], node);
+      return acc + map.edgeWeight(p[index - 1], node);
     }, 0);
     return pathLength === shortestDistance;
   }).map((p) => p.reverse());

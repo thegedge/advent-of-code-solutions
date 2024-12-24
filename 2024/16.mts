@@ -29,7 +29,7 @@ class ReindeerMap implements Graph<string, Node, number> {
     return [Math.floor(key / this.data[0].length), key % this.data[0].length, direction];
   }
 
-  distance(a: Node, b: Node): number {
+  edgeWeight(a: Node, b: Node): number {
     const distance = Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]);
     if (distance > 1) {
       // There could be a path that goes from a to b, but we'll ignore that
