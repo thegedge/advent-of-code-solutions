@@ -4,7 +4,8 @@
   },
 
   "tasks": {
-    "do": "deno run --allow-read"
+    "do": "deno run --allow-read",
+    "tc": "deno check */*.mts"
   },
 
   "fmt": {

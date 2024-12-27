@@ -1,6 +1,4 @@
-import { maxOf } from "std/collections/mod.ts";
 import { bfs, Coordinate, GridMap } from "../utils/maps.mts";
-import { id } from "../utils/utility.mts";
 
 const groups = (
   await Deno.readTextFile(
@@ -66,11 +64,16 @@ class ProblemTenMap extends GridMap<string> {
 
 const solvePart1 = () => {
   const results = groups.map(readData).map((map) => {
-    const startingNodes = map.findCoords("S");
-    const distances = bfs(map, { startingNodes });
+    let maxDistance = 0;
+    bfs(map, {
+      startingNodes: map.findCoords("S"),
+      process: (_map, _node, distance) => {
+        maxDistance = Math.max(maxDistance, distance);
+      },
+    });
     // console.log(dumpMapData(distances));
     // console.log();
-    return maxOf(Array.from(distances.values()), id);
+    return maxDistance;
   });
 
   console.log(results);
@@ -83,6 +86,9 @@ const solvePart2 = () => {
     const startingNodes = map.findCoords("S")!;
     const loop = bfs(map, {
       startingNodes,
+      process: (_map, node, distance) => {
+        //
+      },
     });
 
     // console.log(dumpMapData(loop, { stringify: (v) => (v == null ? "x" : v) }));

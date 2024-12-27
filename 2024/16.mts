@@ -7,14 +7,6 @@ type Node = [row: number, column: number, direction: Direction];
 class ReindeerMap implements Graph<string, Node, number> {
   constructor(readonly data: string[][]) {}
 
-  nodes(): Node[] {
-    return this.data.flatMap((row, rowIndex) =>
-      row.flatMap((_, colIndex): Node[] => {
-        return DIRECTIONS.map((dir): Node => [rowIndex, colIndex, dir]).filter((n) => this.validCoord(n));
-      })
-    );
-  }
-
   valueAt(node: Node): string {
     return this.data[node[0]][node[1]];
   }

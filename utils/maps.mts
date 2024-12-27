@@ -11,12 +11,7 @@ export type Primitive = string | number | boolean | bigint | boolean | symbol | 
  * @template NodeT the type for identifying a node
  * @template DistanceT the type representing the distance between two nodes
  */
-export interface Graph<ValueT, NodeT, KeyT extends Primitive, DistanceT = number> {
-  /**
-   * Return all nodes in this map.
-   */
-  nodes(): NodeT[];
-
+export interface Graph<ValueT, NodeT, KeyT extends Primitive = Primitive, DistanceT = number> {
   /**
    * Get the valid neighbours for a given node
    */
@@ -54,12 +49,12 @@ export class GridMap<T> implements Graph<T, Coordinate, number> {
 
   // IMap implementation
 
-  nodes(): Coordinate[] {
-    return this.data.flatMap((row, rowIndex) => row.map((_, colIndex) => [rowIndex, colIndex] as const));
-  }
-
   valueAt(coord: Coordinate): T {
     return this.data[coord[0]][coord[1]];
+  }
+
+  setValueAt(coord: Coordinate, value: T): void {
+    this.data[coord[0]][coord[1]] = value;
   }
 
   keyFor(coord: Coordinate): number {
@@ -67,7 +62,8 @@ export class GridMap<T> implements Graph<T, Coordinate, number> {
   }
 
   nodeFor(key: number): Coordinate {
-    return [Math.floor(key / this.data.length), key % this.data.length];
+    const col = key % this.data[0].length;
+    return [(key - col) / this.data[0].length, col];
   }
 
   edgeWeight(a: Coordinate, b: Coordinate): number {
@@ -282,8 +278,15 @@ export function bfs<ValueT, NodeT, KeyT extends Primitive>(
     /** The nodes to start expanding from */
     startingNodes: NodeT[];
 
+    /**
+     * Stop searching after reaching this distance.
+     *
+     * @default Infinity
+     */
+    maxDistance?: number;
+
     /** Callback function for when we visit a node */
-    process?: (map: Graph<ValueT, NodeT, KeyT, number>, node: NodeT, distance: number) => void;
+    process: (map: Graph<ValueT, NodeT, KeyT, number>, node: NodeT, distance: number) => void;
 
     /**
      * If `true`, keep visiting nodes regardless of whether or not they were previously visited.
@@ -295,12 +298,22 @@ export function bfs<ValueT, NodeT, KeyT extends Primitive>(
     ignoreVisited?: boolean;
   },
 ): Map<KeyT, number> {
-  const { process, startingNodes, ignoreVisited = false } = options;
+  const {
+    process,
+    startingNodes,
+    ignoreVisited = false,
+    maxDistance = Infinity,
+  } = options;
 
   const visited = new Map<KeyT, number>();
   const queue: [NodeT, number][] = startingNodes.map((n) => [n, 0]);
 
   while (queue.length > 0) {
+    const distance = queue[0][1];
+    if (distance >= maxDistance) {
+      break;
+    }
+
     queue.splice(0, queue.length).forEach(([node, distance]) => {
       const key = map.keyFor(node);
       const currentDistance = visited.get(key);
@@ -309,8 +322,8 @@ export function bfs<ValueT, NodeT, KeyT extends Primitive>(
         return;
       }
 
-      visited.set(key, distance);
       process?.(map, node, distance);
+      visited.set(key, distance);
 
       const next = map.neighbours(node);
       queue.push(...next.map((neighbour): [NodeT, number] => {
@@ -321,8 +334,6 @@ export function bfs<ValueT, NodeT, KeyT extends Primitive>(
 
   return visited;
 }
-
-const UNVISITED = Symbol("UNVISITED");
 
 export function dijkstra<ValueT, NodeT, KeyT extends Primitive>(
   map: Graph<ValueT, NodeT, KeyT, number>,
@@ -378,17 +389,12 @@ export function dijkstra<ValueT, NodeT, KeyT extends Primitive>(
     return a[1] < b[1] ? -1 : a[1] > b[1] ? 1 : 0;
   });
   const distances = new Map<KeyT, number>();
-  const previous = new Map<KeyT, KeyT[] | typeof UNVISITED>();
+  const previous = new Map<KeyT, KeyT[]>();
   const sourceKey = map.keyFor(options.source);
   const destinationKey = map.keyFor(options.destination);
 
   queue.push([options.source, 0]);
-
-  for (const node of map.nodes()) {
-    const nodeKey = map.keyFor(node);
-    previous.set(nodeKey, UNVISITED);
-    distances.set(nodeKey, nodeKey === sourceKey ? 0 : Infinity);
-  }
+  distances.set(sourceKey, 0);
 
   let shortestDistance = Infinity;
   while (queue.length > 0) {
@@ -407,9 +413,9 @@ export function dijkstra<ValueT, NodeT, KeyT extends Primitive>(
     for (const neighbour of map.neighbours(node)) {
       const neighbourKey = map.keyFor(neighbour);
       const newDistance = distance + map.edgeWeight(node, neighbour);
-      const currentDistance = distances.get(neighbourKey)!;
+      const currentDistance = distances.get(neighbourKey) ?? Infinity;
       if (newDistance <= currentDistance) {
-        const previousNodes = previous.get(neighbourKey);
+        const previousNodes = previous.has(neighbourKey) ? previous.get(neighbourKey) : undefined;
         if (Array.isArray(previousNodes)) {
           previousNodes.push(nodeKey);
         } else {
@@ -444,7 +450,7 @@ export function dijkstra<ValueT, NodeT, KeyT extends Primitive>(
       }
 
       const nextNodeKeys = previous.get(key);
-      if (!nextNodeKeys || nextNodeKeys === UNVISITED) {
+      if (!nextNodeKeys) {
         return;
       }
 
@@ -453,7 +459,6 @@ export function dijkstra<ValueT, NodeT, KeyT extends Primitive>(
       currentHeadKeys.push(nextNodeKeys[0]);
       if (allPaths) {
         for (const headKey of nextNodeKeys.slice(1)) {
-          // console.log(map.nodeFor(key), map.nodeFor(headKey));
           currentPaths.push([...pathsCopy[index], headsCopy[index]]);
           currentHeads.push(map.nodeFor(headKey));
           currentHeadKeys.push(headKey);

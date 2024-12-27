@@ -1,11 +1,11 @@
-import { cardinalDirections, type Coordinate, GridMap } from "../utils/maps.mts";
+import { GridMap } from "../utils/maps.mts";
 
 const groups = (await Deno.readTextFile(new URL("", import.meta.url.replace(".mts", ".in")).pathname)).split("\n---\n");
 
 const readData = (data: string) => {
   const [map, movements] = data.split("\n\n");
   return {
-    map: new RobotMap(map.split("\n").map((row) => row.split(""))),
+    map: new GridMap(map.split("\n").map((row) => row.split(""))),
     movements: movements.split("\n").join("").split("").map((movement): [number, number] => {
       switch (movement) {
         case "^":
@@ -24,11 +24,7 @@ const readData = (data: string) => {
   };
 };
 
-class RobotMap extends GridMap<string> {
-  override neighboursFor(coord: Coordinate): Coordinate[] {
-    return cardinalDirections(coord);
-  }
-}
+type RobotMap = GridMap<string>;
 
 const maybeMoveBoxes1 = (map: RobotMap, x: number, y: number, deltaX: number, deltaY: number) => {
   const newX = x + deltaX;
@@ -169,12 +165,8 @@ const solvePart1 = () => {
 };
 
 const solvePart2 = () => {
-  const results = groups.map(readData).map(({ map, movements }, index) => {
-    // if (index != 0) {
-    //   return null;
-    // }
-
-    map = new RobotMap(map.data.map((row) =>
+  const results = groups.map(readData).map(({ map, movements }) => {
+    map = new GridMap(map.data.map((row) =>
       row.flatMap((v) => {
         if (v == "." || v == "#") {
           return [v, v];
