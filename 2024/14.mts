@@ -1,5 +1,5 @@
 import { range, transpose } from "../utils/collections.mts";
-import { dumpMapData, findHorizontalRuns } from "../utils/maps.mts";
+import { dumpMapData, findHorizontalRuns } from "../utils/graphs.mts";
 
 const groups = (await Deno.readTextFile(new URL("", import.meta.url.replace(".mts", ".in")).pathname)).split("\n\n");
 

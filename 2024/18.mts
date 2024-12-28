@@ -1,5 +1,7 @@
 import { range } from "../utils/collections.mts";
-import { type Coordinate, dijkstra, GridMap } from "../utils/maps.mts";
+import { dijkstra } from "../utils/dijkstra.mts";
+import { type Coordinate } from "../utils/graphs.mts";
+import { GridMap } from "../utils/GridMap.mts";
 
 const groups = (await Deno.readTextFile(new URL("", import.meta.url.replace(".mts", ".in")).pathname)).split("\n\n");
 

@@ -1,127 +1,91 @@
-import { cardinalDirections, type Coordinate, dijkstra, type Graph, GridMap } from "../utils/maps.mts";
+import { bfs } from "../utils/bfs.mts";
+import { type Coordinate } from "../utils/graphs.mts";
+import { GridMap } from "../utils/GridMap.mts";
 
 const groups = (await Deno.readTextFile(new URL("", import.meta.url.replace(".mts", ".in")).pathname)).split("\n\n");
 
 type Node = readonly [...Coordinate, numCheatsLeft: number];
 
-class RacetrackMap extends GridMap<string> {
+class Racetrack extends GridMap<string> {
   override validCoord(coord: Coordinate): boolean {
-    return super.validCoord(coord) && this.valueAt(coord) !== "#" && this.valueAt(coord) !== "$";
+    return super.validCoord(coord) && this.valueAt(coord) !== "#";
   }
 }
 
-class Racetrack implements Graph<string, Node, number> {
-  constructor(readonly map: RacetrackMap, readonly maxCheats: number) {
-    if (maxCheats >= 8) {
-      throw new Error("Too many cheats");
-    }
-    RacetrackMap;
-  }
+const readData = (data: string) => {
+  return new Racetrack(data.split("\n").map((line) => line.split("")));
+};
 
-  valueAt(node: Node): string {
-    return this.map.valueAt(node as unknown as Coordinate);
-  }
+const solve = (racetrack: Racetrack, cheatLength: number) => {
+  const start = racetrack.findCoords("S")[0];
+  const end = racetrack.findCoords("E")[0];
 
-  keyFor(node: Node): number {
-    return (this.map.keyFor(node as unknown as Coordinate) << 3) | node[2];
-  }
-
-  nodeFor(key: number): Node {
-    const numCheats = key & 0b111;
-    return [...this.map.nodeFor(key >> 3), numCheats];
-  }
-
-  edgeWeight(a: Node, b: Node): number {
-    return this.map.edgeWeight(a as unknown as Coordinate, b as unknown as Coordinate);
-  }
-
-  neighbours(node: Node): Node[] {
-    const [row, col, numCheatsLeft] = node;
-    const neighbours = cardinalDirections([row, col]).map(([row, col]) => [row, col, numCheatsLeft] as const);
-    if (numCheatsLeft == 0) {
-      return neighbours.filter((neighbour) => this.validCoord(neighbour));
-    }
-
-    return neighbours.flatMap((neighbour) => {
-      if (this.validCoord(neighbour)) {
-        return [neighbour];
+  // Get all the distances from the goal
+  const distancesFromEnd = new Map<number, number>();
+  bfs(racetrack, {
+    startingNodes: [end],
+    process: (map, node, distance, alreadyVisited) => {
+      if (!alreadyVisited) {
+        distancesFromEnd.set(map.keyFor(node), distance);
       }
+    },
+  });
 
-      // We use "$" to represent a wall that has been locked down from cheating
-      if (this.map.valueAt(neighbour as unknown as Coordinate) === "$") {
-        return [];
+  const shortestDistanceWithoutCheats = distancesFromEnd.get(racetrack.keyFor(start))!;
+
+  // For all nodes we processed, see if we can reach the destination with a cheat more quickly
+  let count = 0n;
+  for (const [key, distanceFromEnd] of distancesFromEnd.entries()) {
+    const node = racetrack.nodeFor(key);
+
+    // So we're currently looking at a node in the graph. Let's consider all of its numbers within a "one cheat" distance.
+    // If we can reach the destination from any of these nodes and save at least 100 picoseconds, increment the count.
+    for (let rowDelta = -cheatLength; rowDelta <= cheatLength; rowDelta++) {
+      const rowAbs = Math.abs(rowDelta);
+
+      // This weird loop is to create a "diamond" like structure that looks something like this:
+      //
+      //     #
+      //    ###
+      //   #####
+      //    ###
+      //     #
+      //
+      for (let colDelta = -cheatLength + rowAbs; colDelta <= cheatLength - rowAbs; colDelta++) {
+        const cheatNeighbour: Coordinate = [node[0] + rowDelta, node[1] + colDelta];
+        if (!racetrack.validCoord(cheatNeighbour)) {
+          continue;
+        }
+
+        const neighbourDistanceFromEnd = distancesFromEnd.get(racetrack.keyFor(cheatNeighbour));
+        if (neighbourDistanceFromEnd == undefined) {
+          // No path from this neighbour (where we cheated) to the end
+          continue;
+        }
+
+        // Did we save at least 100 picoseconds?
+        const distanceFromStart = shortestDistanceWithoutCheats - distanceFromEnd;
+        const cheatDistance = distanceFromStart + neighbourDistanceFromEnd + Math.abs(rowDelta) + Math.abs(colDelta);
+        if (100 + cheatDistance <= shortestDistanceWithoutCheats) {
+          count++;
+        }
       }
-
-      return [[neighbour[0], neighbour[1], numCheatsLeft - 1]];
-    });
+    }
   }
-
-  validCoord(node: Node): boolean {
-    return this.map.validCoord(node as unknown as Coordinate);
-  }
-
-  findCoord(value: string): Coordinate | undefined {
-    return this.map.findCoords(value)?.[0];
-  }
-}
-
-const readData = (data: string, maxCheats = 1) => {
-  const map = new RacetrackMap(data.split("\n").map((line) => line.split("")));
-  return new Racetrack(map, maxCheats);
+  return count;
 };
 
 const solvePart1 = () => {
   const results = groups.map(readData).map((racetrack) => {
-    const [startRow, startCol] = racetrack.findCoord("S")!;
-    const [endRow, endCol] = racetrack.findCoord("E")!;
-
-    const shortestNoCheats = dijkstra(racetrack.map, {
-      source: [startRow, startCol],
-      destination: [endRow, endCol],
-    });
-
-    let numCheatsSaveAtLeast100 = 0;
-
-    // We repeatedly apply dijkstra with cheats enabled.
-    // To prevent reusing cheats, we lock down walls that have been cheated on. This means the loop
-    // will find longer and longer paths until we get back to the shortest path without cheats.
-    //
-    // Update: I was able to run this to completion, but it's SUPER SLOW, especially as you get
-    // closer to the real shortest distance
-    let shortest: number = 0;
-    let paths: Node[][];
-    while (shortest < shortestNoCheats) {
-      [shortest, paths] = dijkstra(racetrack, {
-        source: [startRow, startCol, 1],
-        destination: [endRow, endCol, 0],
-        paths: "all",
-      });
-
-      console.log(shortestNoCheats - shortest);
-      if (paths.length == 0 || shortestNoCheats - shortest < 100) {
-        break;
-      }
-
-      numCheatsSaveAtLeast100 += paths.length;
-      for (const path of paths) {
-        for (const coord of path) {
-          const mapCoord = coord as unknown as Coordinate;
-          if (racetrack.map.valueAt(mapCoord) === "#") {
-            racetrack.map.setValueAt(mapCoord, "$");
-          }
-        }
-      }
-    }
-
-    return numCheatsSaveAtLeast100;
+    return solve(racetrack, 2);
   });
 
   console.log(results);
 };
 
 const solvePart2 = () => {
-  const results = groups.map(readData).map((map) => {
-    //
+  const results = groups.map(readData).map((racetrack) => {
+    return solve(racetrack, 20);
   });
 
   console.log(results);

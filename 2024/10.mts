@@ -1,5 +1,7 @@
 import { sumOf } from "std/collections/sum_of.ts";
-import { bfs, cardinalDirections, Coordinate, GridMap } from "../utils/maps.mts";
+import { bfs } from "../utils/bfs.mts";
+import { cardinalDirections, Coordinate } from "../utils/graphs.mts";
+import { GridMap } from "../utils/GridMap.mts";
 
 const groups = (await Deno.readTextFile(new URL("", import.meta.url.replace(".mts", ".in")).pathname)).split("\n\n");
 
@@ -31,8 +33,8 @@ const solvePart1 = () => {
       let peaksReached = 0;
       bfs(trail, {
         startingNodes: [trailhead],
-        process(map, node) {
-          if (map.valueAt(node) === 9) {
+        process(map, node, _distance, alreadyVisited) {
+          if (!alreadyVisited && map.valueAt(node) === 9) {
             peaksReached++;
           }
         },
@@ -50,11 +52,13 @@ const solvePart2 = () => {
       let peaksReached = 0;
       bfs(trail, {
         startingNodes: [trailhead],
-        ignoreVisited: true,
         process(map, node) {
           if (map.valueAt(node) === 9) {
             peaksReached++;
           }
+
+          // Continue processing this node, even if we already visited it
+          return true;
         },
       });
       return peaksReached;

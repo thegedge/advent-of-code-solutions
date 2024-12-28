@@ -1,4 +1,6 @@
-import { bfs, Coordinate, GridMap } from "../utils/maps.mts";
+import { bfs } from "../utils/bfs.mts";
+import { Coordinate } from "../utils/graphs.mts";
+import { GridMap } from "../utils/GridMap.mts";
 
 const groups = (
   await Deno.readTextFile(

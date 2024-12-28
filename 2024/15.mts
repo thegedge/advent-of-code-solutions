@@ -1,4 +1,4 @@
-import { GridMap } from "../utils/maps.mts";
+import { GridMap } from "../utils/GridMap.mts";
 
 const groups = (await Deno.readTextFile(new URL("", import.meta.url.replace(".mts", ".in")).pathname)).split("\n---\n");
 

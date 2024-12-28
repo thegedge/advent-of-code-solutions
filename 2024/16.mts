@@ -1,4 +1,5 @@
-import { dijkstra, Direction, directionDelta, DIRECTIONS, type Graph, numTurns, withinBounds } from "../utils/maps.mts";
+import { dijkstra } from "../utils/dijkstra.mts";
+import { Direction, directionDelta, DIRECTIONS, type Graph, numTurns, withinBounds } from "../utils/graphs.mts";
 
 const groups = (await Deno.readTextFile(new URL("", import.meta.url.replace(".mts", ".in")).pathname)).split("\n\n");
 

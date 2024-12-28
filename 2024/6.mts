@@ -1,4 +1,4 @@
-import { withinBounds } from "../utils/maps.mts";
+import { withinBounds } from "../utils/graphs.mts";
 
 const groups = (await Deno.readTextFile(new URL("", import.meta.url.replace(".mts", ".in")).pathname)).split("\n\n");
 const readData = (data: string) => {

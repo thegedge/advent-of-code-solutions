@@ -1,5 +1,7 @@
+import { bfs } from "../utils/bfs.mts";
 import { transpose } from "../utils/collections.mts";
-import { bfs, cardinalDirections, type Coordinate, GridMap } from "../utils/maps.mts";
+import { cardinalDirections, type Coordinate } from "../utils/graphs.mts";
+import { GridMap } from "../utils/GridMap.mts";
 
 const groups = (await Deno.readTextFile(new URL("", import.meta.url.replace(".mts", ".in")).pathname)).split("\n\n");
 
