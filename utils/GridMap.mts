@@ -29,12 +29,18 @@ export class GridMap<T> implements Graph<T, Coordinate, number> {
   }
 
   edgeWeight(a: Coordinate, b: Coordinate): number {
-    return Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]);
+    const dist = Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]);
+    if (dist > 1 || !this.validCoord(a) || !this.validCoord(b)) {
+      return Infinity;
+    }
+    return dist;
   }
 
   neighbours(coord: Coordinate): Coordinate[] {
     return cardinalDirections(coord).filter((c) => this.validCoord(c));
   }
+
+  // GridMap-specific methods
 
   /**
    * Finds the coordinates in this map with the given value.
@@ -59,6 +65,16 @@ export class GridMap<T> implements Graph<T, Coordinate, number> {
     for (let row = 0; row < this.data.length; ++row) {
       for (let col = 0; col < this.data[row].length; ++col) {
         callback(this.data[row][col], [row, col]);
+      }
+    }
+  }
+
+  *nodes() {
+    const height = this.data.length;
+    const width = this.data[0].length;
+    for (let row = 0; row < height; ++row) {
+      for (let col = 0; col < width; ++col) {
+        yield [row, col] as Coordinate;
       }
     }
   }

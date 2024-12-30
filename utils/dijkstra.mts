@@ -39,7 +39,7 @@ export function dijkstra<ValueT, NodeT, KeyT extends Primitive>(
     /** The node to start from */
     source: NodeT;
 
-    /** The nodes considered a destination */
+    /** The node considered a destination */
     destination: NodeT;
 
     /**
@@ -57,17 +57,17 @@ export function dijkstra<ValueT, NodeT, KeyT extends Primitive>(
   const distances = new Map<KeyT, number>();
   const previous = new Map<KeyT, KeyT[]>();
   const sourceKey = map.keyFor(options.source);
+
+  const allPaths = options.paths === "all";
   const destinationKey = map.keyFor(options.destination);
 
   queue.push([options.source, 0]);
   distances.set(sourceKey, 0);
 
-  let shortestDistance = Infinity;
   while (queue.length > 0) {
     const [node, distance] = queue.pop()!;
     const nodeKey = map.keyFor(node);
-    if (destinationKey == nodeKey) {
-      shortestDistance = Math.min(shortestDistance, distance);
+    if (nodeKey == destinationKey) {
       continue;
     }
 
@@ -83,7 +83,9 @@ export function dijkstra<ValueT, NodeT, KeyT extends Primitive>(
       if (newDistance <= currentDistance) {
         const previousNodes = previous.has(neighbourKey) ? previous.get(neighbourKey) : undefined;
         if (Array.isArray(previousNodes)) {
-          previousNodes.push(nodeKey);
+          if (allPaths) {
+            previousNodes.push(nodeKey);
+          }
         } else {
           previous.set(neighbourKey, [nodeKey]);
         }
@@ -96,20 +98,20 @@ export function dijkstra<ValueT, NodeT, KeyT extends Primitive>(
     }
   }
 
+  const shortestDistance = distances.get(destinationKey!) ?? Infinity;
   if (!options.paths) {
-    return distances.get(destinationKey) ?? Infinity;
+    return shortestDistance;
   }
 
-  const allPaths = options.paths === "all";
   const paths: NodeT[][] = [];
   const currentPaths: NodeT[][] = [[]];
-  const currentHeads = [options.destination];
-  const currentHeadKeys = [destinationKey];
+  const currentHeads: NodeT[] = [options.destination];
+  const currentHeadKeys: KeyT[] = [destinationKey!];
   while (currentHeads.length > 0) {
-    console.log(currentHeads.length);
     const headsCopy = currentHeads.splice(0);
     const keysCopy = currentHeadKeys.splice(0);
     const pathsCopy = currentPaths.splice(0);
+
     keysCopy.forEach((key, index) => {
       if (key == sourceKey) {
         paths.push([...pathsCopy[index], options.source]);
@@ -121,15 +123,10 @@ export function dijkstra<ValueT, NodeT, KeyT extends Primitive>(
         return;
       }
 
-      currentPaths.push([...pathsCopy[index], headsCopy[index]]);
-      currentHeads.push(map.nodeFor(nextNodeKeys[0]));
-      currentHeadKeys.push(nextNodeKeys[0]);
-      if (allPaths) {
-        for (const headKey of nextNodeKeys.slice(1)) {
-          currentPaths.push([...pathsCopy[index], headsCopy[index]]);
-          currentHeads.push(map.nodeFor(headKey));
-          currentHeadKeys.push(headKey);
-        }
+      for (const headKey of nextNodeKeys) {
+        currentPaths.push([...pathsCopy[index], headsCopy[index]]);
+        currentHeads.push(map.nodeFor(headKey));
+        currentHeadKeys.push(headKey);
       }
     });
   }
@@ -140,11 +137,10 @@ export function dijkstra<ValueT, NodeT, KeyT extends Primitive>(
       if (index === 0) {
         return acc;
       }
-
-      return acc + map.edgeWeight(p[index - 1], node);
+      return acc + map.edgeWeight(node, p[index - 1]);
     }, 0);
     return pathLength === shortestDistance;
   }).map((p) => p.reverse());
 
-  return [distances.get(destinationKey) ?? Infinity, allPaths ? shortestPaths : (shortestPaths[0] ?? [])];
+  return [shortestDistance, allPaths ? shortestPaths : (shortestPaths[0] ?? [])];
 }
