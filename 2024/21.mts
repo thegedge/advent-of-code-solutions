@@ -2,6 +2,7 @@ import { cartesianProduct, range, sumOf } from "../utils/collections.mts";
 import { dijkstra } from "../utils/dijkstra.mts";
 import { type Coordinate, type Graph } from "../utils/graphs.mts";
 import { GridMap } from "../utils/GridMap.mts";
+import { id } from "../utils/utility.mts";
 
 const groups = (await Deno.readTextFile(new URL("", import.meta.url.replace(".mts", ".in")).pathname)).split("\n\n");
 
@@ -55,11 +56,13 @@ class DirectionalPad extends GridMap<DirectionNode> {
 // In other words, we have a "hypergraph", composed of multiple underlying graphs, and the edges
 // between them are labeled with action taken on the human-controlled pad.
 //
-type SystemNode = [keypad: Coordinate, dir1: Coordinate, dir2: Coordinate];
+type SystemNode = [keypad: Coordinate, ...Coordinate[]];
 
-class System implements Graph<string, SystemNode, number, number> {
+class System implements Graph<string, SystemNode, bigint, number> {
   readonly keypad = new KeyPad();
   readonly directions = new DirectionalPad();
+
+  constructor(readonly numDirPads: number) {}
 
   nodes(): SystemNode[] {
     const keyNodes = this.keypad.nodes();
@@ -67,12 +70,15 @@ class System implements Graph<string, SystemNode, number, number> {
     return cartesianProduct(keyNodes, dirNodes, dirNodes).toArray();
   }
 
-  keyFor(node: SystemNode): number {
+  keyFor(node: SystemNode): bigint {
     // 11 nodes for keypad = 4 bits
     // 5 nodes for directions = 3 bits
-    return (this.keypad.keyFor(node[0]) << 6) |
-      (this.directions.keyFor(node[1]) << 3) |
-      (this.directions.keyFor(node[2]));
+    return node.reduce((key, value, index) => {
+      if (index == 0) {
+        return BigInt(this.keypad.keyFor(value));
+      }
+      return (key << 3n) | BigInt(this.directions.keyFor(value));
+    }, 0n);
   }
 
   valueAt(node: SystemNode): string {
@@ -81,27 +87,24 @@ class System implements Graph<string, SystemNode, number, number> {
       this.directions.valueAt(node[2]);
   }
 
-  nodeFor(key: number): SystemNode {
-    return [
-      this.keypad.nodeFor((key >> 6) & 0b1111),
-      this.directions.nodeFor((key >> 3) & 0b111),
-      this.directions.nodeFor(key & 0b111),
-    ];
+  nodeFor(key: bigint): SystemNode {
+    const result = new Array<Coordinate>(this.numDirPads + 1) as SystemNode;
+    for (let i = this.numDirPads; i > 0; --i) {
+      result[i] = this.directions.nodeFor(Number(key & 0b111n));
+      key >>= 3n;
+    }
+    result[0] = this.keypad.nodeFor(Number(key));
+    return result;
   }
 
   /**
    * Find the key that was pressed to take us from node a to node b.
    */
   keypress(a: SystemNode, b: SystemNode): Direction | "A" | null {
-    const a1key = this.keypad.keyFor(a[0]);
-    const a2key = this.directions.keyFor(a[1]);
-    const a3key = this.directions.keyFor(a[2]);
+    const akeys = a.map((v, index) => index == 0 ? this.keypad.keyFor(v) : this.directions.keyFor(v));
+    const bkeys = b.map((v, index) => index == 0 ? this.keypad.keyFor(v) : this.directions.keyFor(v));
 
-    const b1key = this.keypad.keyFor(b[0]);
-    const b2key = this.directions.keyFor(b[1]);
-    const b3key = this.directions.keyFor(b[2]);
-
-    const diffs = [a1key !== b1key, a2key !== b2key, a3key !== b3key];
+    const diffs = akeys.map((v, index) => v !== bkeys[index]);
     const numDifferences = diffs.filter((x) => x).length;
 
     if (numDifferences > 1) {
@@ -113,33 +116,19 @@ class System implements Graph<string, SystemNode, number, number> {
       return null;
     }
 
-    if (numDifferences === 0 || !diffs[2]) {
+    if (numDifferences === 0 || !diffs[diffs.length - 1]) {
       return "A";
     }
 
-    return movement(a[2], b[2]);
+    return movement(a[a.length - 1], b[b.length - 1]);
   }
 
   edgeWeight(a: SystemNode, b: SystemNode): number {
-    const a1key = this.keypad.keyFor(a[0]);
-    const a2key = this.directions.keyFor(a[1]);
-    const a3key = this.directions.keyFor(a[2]);
+    const akeys = a.map((v, index) => index == 0 ? this.keypad.keyFor(v) : this.directions.keyFor(v));
+    const bkeys = b.map((v, index) => index == 0 ? this.keypad.keyFor(v) : this.directions.keyFor(v));
 
-    const b1key = this.keypad.keyFor(b[0]);
-    const b2key = this.directions.keyFor(b[1]);
-    const b3key = this.directions.keyFor(b[2]);
-
-    const diffs = [a1key !== b1key, a2key !== b2key, a3key !== b3key];
+    const diffs = akeys.map((v, index) => v !== bkeys[index]);
     const numDifferences = diffs.filter((x) => x).length;
-
-    // if (log) {
-    //   console.log(
-    //     `${this.keypad.valueAt(a[0])}${this.directions.valueAt(a[1])}${this.directions.valueAt(a[2])}`,
-    //     "->",
-    //     `${this.keypad.valueAt(b[0])}${this.directions.valueAt(b[1])}${this.directions.valueAt(b[2])}`,
-    //     numDifferences,
-    //   );
-    // }
 
     if (numDifferences > 1) {
       // We have edges between two types of nodes
@@ -150,72 +139,59 @@ class System implements Graph<string, SystemNode, number, number> {
       return Infinity;
     }
 
-    if (diffs[0]) {
-      // This is a keypad movement, so we need to check two things:
-      //   1. Is the keypad movement itself valid?
-      //   2. Is the dpad direction the direction that will take us from a to b
-      const delta = movement(a[0], b[0]);
-      return delta === this.directions.valueAt(a[1]) ? 1 : Infinity;
+    const indexWithDiff = diffs.findIndex(id);
+    if (indexWithDiff >= 0 && indexWithDiff < a.length - 1) {
+      const delta = movement(a[indexWithDiff], b[indexWithDiff]);
+      return delta === this.directions.valueAt(a[indexWithDiff + 1]) ? 1 : Infinity;
     }
 
-    // Okay, this is a dpad movement. Find which dpad moved, and similar to above verify that the
-    // movement is valid.
-    if (diffs[1]) {
-      const delta = movement(a[1], b[1]);
-      return delta === this.directions.valueAt(a[2]) ? 1 : Infinity;
-    }
-
-    // This is the human-controlled dpad, so button presses are instant
+    // No difference, or difference on the last keypad, which was human controlled and requires one button press.
+    // We don't check edge validity though (so this would be wrong if we moved from "A" to "<").
     return 1;
   }
 
   neighbours(node: SystemNode): SystemNode[] {
     const neighbours: SystemNode[] = [];
 
-    const dpad1IsActivate = this.directions.valueAt(node[1]) === "A";
-    const dpad2IsActivate = this.directions.valueAt(node[2]) === "A";
-
-    if (dpad2IsActivate) {
-      if (dpad1IsActivate) {
-        // Both dpads on activate, so we can move to the same node. There's no movement, but this
-        // edge in a path indicates pressing a button on the keypad.
-        neighbours.push(node);
-      } else {
-        // dpad 1 is on a direction, so we can move the keypad in that direction.
-        const key = nodeForMovement(node[0], this.directions.valueAt(node[1]));
-        if (key && this.keypad.validCoord(key)) {
-          neighbours.push([key, node[1], node[2]]);
-        }
+    // Simulate what happens if the human presses activate
+    const firstNonActivate = node.findLastIndex((v, index) => (index == 0 ? this.keypad : this.directions).valueAt(v) !== "A");
+    if (firstNonActivate == 1) {
+      // The human pressing "activate" will touch activate on all dpads except the last one before the keypad,
+      // so we need to move the keypad accordinly
+      const movement = nodeForMovement(node[0], this.directions.valueAt(node[1]));
+      if (movement && this.keypad.validCoord(movement)) {
+        neighbours.push([movement, ...node.slice(1)]);
       }
-    } else {
-      // Dpad 2 is on a movement key, so we can move the dpad 1 in that direction.
-      const dpad1 = nodeForMovement(node[1], this.directions.valueAt(node[2]));
-      if (dpad1 && this.directions.validCoord(dpad1)) {
-        neighbours.push([node[0], dpad1, node[2]]);
+    } else if (firstNonActivate > 1) {
+      // The human pressing "activate" will activate all dpads up to the one we found that isn't over "activate"
+      // so we need to move the dpad before it accordingly
+      const movement = nodeForMovement(node[firstNonActivate - 1], this.directions.valueAt(node[firstNonActivate]));
+      if (movement && this.directions.validCoord(movement)) {
+        neighbours.push([node[0], ...node.slice(1, firstNonActivate - 1), movement, ...node.slice(firstNonActivate)]);
       }
     }
 
-    // Dpad 2 is moved by the human-controlled dpad, so we can move it in any direction
+    // Otherwise, the human presses a direction,
     for (const direction of DIRECTIONS) {
-      const movement = nodeForMovement(node[2], direction);
+      const movement = nodeForMovement(node[node.length - 1], direction);
       if (movement && this.directions.validCoord(movement)) {
-        neighbours.push([node[0], node[1], movement]);
+        neighbours.push([...node.slice(0, node.length - 1), movement] as unknown as SystemNode);
       }
     }
 
     // console.log({
     //   node: this.valueAt(node),
+    //   firstNonActivate,
     //   neighbours: neighbours.map((n) => this.valueAt(n)),
     // });
 
     return neighbours;
   }
 
-  nodeForString(node: `${KeyPadNode}${DirectionNode}${DirectionNode}`): SystemNode {
+  nodeForString(node: string): SystemNode {
     const keyStart = this.keypad.findCoords(node[0] as KeyPadNode)[0];
-    const dir1Start = this.directions.findCoords(node[1] as DirectionNode)[0];
-    const dir2Start = this.directions.findCoords(node[2] as DirectionNode)[0];
-    return [keyStart, dir1Start, dir2Start];
+    const dirPadStarts = node.slice(1).split("").map((c) => this.directions.findCoords(c as DirectionNode)[0]);
+    return [keyStart, ...dirPadStarts];
   }
 }
 
@@ -249,7 +225,7 @@ const movement = (from: Coordinate, to: Coordinate): Direction | null => {
 
 const solvePart1 = () => {
   const results = groups.map(readData).map((group) => {
-    const graph = new System();
+    const graph = new System(2);
 
     return sumOf(group, (line) => {
       const totalDistance = sumOf(range(line.length), (index) => {
@@ -273,7 +249,24 @@ const solvePart1 = () => {
 
 const solvePart2 = () => {
   const results = groups.map(readData).map((group) => {
-    //
+    const graph = new System(3);
+    const suffix = "A".repeat(3);
+
+    return sumOf(group, (line) => {
+      const totalDistance = sumOf(range(line.length), (index) => {
+        const distanceBetweenKeypadDigits = dijkstra(graph, {
+          source: graph.nodeForString(`${index == 0 ? "A" : line[index - 1]}${suffix}` as any),
+          destination: graph.nodeForString(`${line[index]}${suffix}` as any),
+        });
+
+        // + 1 because the above only gets us to the state we need to be in to press the right key on
+        // the keypad, but we still need to have the human press the activate button to log it.
+        return BigInt(distanceBetweenKeypadDigits + 1);
+      });
+
+      // console.log(line, totalDistance, totalDistance * BigInt(parseInt(line)));
+      return totalDistance * BigInt(parseInt(line));
+    });
   });
 
   console.log(results);
