@@ -1,7 +1,7 @@
-import { readFile } from "node:fs/promises";
 import { countBy, maxBy, sortBy, sumOf } from "../utils/collections.mts";
+import { readInputFile } from "../utils/utility.mts";
 
-const groups = (await readFile(new URL("", import.meta.url.replace(".mts", ".in")).pathname, "utf-8")).split("\n\n");
+const groups = await readInputFile(import.meta);
 
 // A lot of duplication in this solution, but no need to generalize!
 
@@ -102,9 +102,7 @@ const compareHands2 = (a: BidWithReplaced, b: BidWithReplaced) => {
   );
 };
 
-const jokerReplacement = (
-  hand: Bid["hand"]
-): keyof typeof CARD_STRENGTHS2 | null => {
+const jokerReplacement = (hand: Bid["hand"]): keyof typeof CARD_STRENGTHS2 | null => {
   const jokerIndex = hand.indexOf("J");
   if (jokerIndex == -1) {
     return null;
@@ -139,9 +137,7 @@ const jokerReplacement = (
         } else if (counts[1][0] == "J") {
           return c;
         } else {
-          return CARD_STRENGTHS2[c] > CARD_STRENGTHS2[counts[1][0]]
-            ? c
-            : counts[1][0];
+          return CARD_STRENGTHS2[c] > CARD_STRENGTHS2[counts[1][0]] ? c : counts[1][0];
         }
       }
       return c == "J" ? highest : c;
@@ -168,9 +164,7 @@ const solvePart2 = () => {
       return {
         hand,
         newHand: replacement
-          ? (hand.map((v) => (v == "J" ? replacement : v)) as Tuple5<
-              keyof typeof CARD_STRENGTHS2
-            >)
+          ? (hand.map((v) => (v == "J" ? replacement : v)) as Tuple5<keyof typeof CARD_STRENGTHS2>)
           : hand,
         amount,
       };

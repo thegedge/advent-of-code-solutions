@@ -22,7 +22,7 @@ export interface Graph<ValueT, NodeT, KeyT extends Primitive = Primitive, Distan
   keyFor(node: NodeT): KeyT;
 
   /**
-   * Convert the key-ified representation back into a `NodeT`
+   * Convert the key representation back into a `NodeT`
    */
   nodeFor(key: KeyT): NodeT;
 
@@ -41,10 +41,9 @@ export const NORTH = 0;
 export const EAST = 1;
 export const SOUTH = 2;
 export const WEST = 3;
-
-export const DIRECTIONS = [NORTH, EAST, SOUTH, WEST];
-
 export type Direction = typeof NORTH | typeof EAST | typeof SOUTH | typeof WEST;
+
+export const DIRECTIONS: Direction[] = [NORTH, EAST, SOUTH, WEST];
 
 /**
  * Return a row/column delta for the given direction.

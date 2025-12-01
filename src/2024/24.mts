@@ -1,7 +1,7 @@
-import { readFile } from "node:fs/promises";
 import { combinations, nonOverlappingPairs, range } from "../utils/collections.mts";
+import { readInputFile } from "../utils/utility.mts";
 
-const groups = (await readFile(new URL("", import.meta.url.replace(".mts", ".in")).pathname, "utf-8")).split("\n---\n");
+const groups = await readInputFile(import.meta, "\n---\n");
 
 const readData = (data: string) => {
   const [inputs, gates] = data.split("\n\n");
@@ -10,7 +10,7 @@ const readData = (data: string) => {
       inputs.split("\n").map((line) => {
         const [a, b] = line.split(": ");
         return [a, parseInt(b)];
-      }),
+      })
     ) as Record<string, number>,
     gates: gates.split("\n").map((line) => {
       const [a, op, b, _arrow, output] = line.split(" ");
@@ -56,7 +56,7 @@ const computeValueFor = (values: Record<string, number>, gatePrefix: string) => 
     if (value == 0 || !key.startsWith(gatePrefix)) {
       return acc;
     }
-    return acc | (1n << (BigInt(key.slice(1))));
+    return acc | (1n << BigInt(key.slice(1)));
   }, 0n);
 };
 
@@ -162,7 +162,8 @@ const solvePart2 = () => {
       // console.log(`${out} -> { ${a} ${b} } [label="${op}" ];`);
 
       if (out.startsWith("z")) {
-        if (out != "z45" && op != "XOR") { // z45 is the last gate
+        if (out != "z45" && op != "XOR") {
+          // z45 is the last gate
           badGateIndexes.push(index);
         }
       } else {
@@ -225,7 +226,9 @@ const solvePart2 = () => {
             gates[b3][GATE_OUTPUT_INDEX],
             gates[a4][GATE_OUTPUT_INDEX],
             gates[b4][GATE_OUTPUT_INDEX],
-          ].sort().join(",");
+          ]
+            .sort()
+            .join(",");
         }
       }
       badGateIndexes[0] = -1;

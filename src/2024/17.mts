@@ -1,6 +1,6 @@
-import { readFile } from "node:fs/promises";
+import { readInputFile } from "../utils/utility.mts";
 
-const groups = (await readFile(new URL("", import.meta.url.replace(".mts", ".in")).pathname, "utf-8")).split("\n---\n");
+const groups = await readInputFile(import.meta, "\n---\n");
 
 type Opcode = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
@@ -12,9 +12,12 @@ const readData = (data: string) => {
       registers.split("\n").map((register) => {
         const [, name, value] = REGISTER_REGEX.exec(register)!;
         return [name, BigInt(value)];
-      }),
+      })
     ),
-    instructions: instructions.split(" ")[1].split(",").map((v) => parseInt(v) as Opcode),
+    instructions: instructions
+      .split(" ")[1]
+      .split(",")
+      .map((v) => parseInt(v) as Opcode),
   };
 };
 

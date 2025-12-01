@@ -12,9 +12,10 @@
   "devDependencies": {
     "@types/lodash-es": "^4.17.12",
     "@types/node": "^24.10.1",
-    "prettier": "^3.7.3"
+    "prettier": "^3.7.3",
+    "typescript": "^5.9.3"
   },
   "scripts": {
-    "do": "node --use-strict --harmony --max-old-space-size=16000 --single-threaded"
+    "do": "find src/2* -name \"*.mjs\" | fzf | xargs node --use-strict --harmony --max-old-space-size=16000 --single-threaded"
   }
 }

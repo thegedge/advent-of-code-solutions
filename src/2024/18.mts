@@ -1,10 +1,10 @@
-import { readFile } from "node:fs/promises";
 import { range } from "../utils/collections.mts";
 import { dijkstra } from "../utils/dijkstra.mts";
 import { type Coordinate } from "../utils/graphs.mts";
 import { GridMap } from "../utils/GridMap.mts";
+import { readInputFile } from "../utils/utility.mts";
 
-const groups = (await readFile(new URL("", import.meta.url.replace(".mts", ".in")).pathname, "utf-8")).split("\n\n");
+const groups = await readInputFile(import.meta);
 
 class MemorySpace extends GridMap<string> {
   override validCoord(coord: Coordinate): boolean {

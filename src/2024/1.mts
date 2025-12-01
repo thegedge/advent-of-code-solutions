@@ -1,16 +1,18 @@
-import { readFile } from "node:fs/promises";
 import { countBy, sumOf, zip } from "../utils/collections.mts";
 import { abs } from "../utils/math.mts";
-import { id } from "../utils/utility.mts";
+import { id, readInputFile } from "../utils/utility.mts";
 
-const groups = (await readFile(new URL("", import.meta.url.replace(".mts", ".in")).pathname, "utf-8")).split("\n\n");
+const groups = await readInputFile(import.meta);
 const readData = (data: string) => {
-   return data.split("\n").reduce(([left, right], line) => {
-    const [a, b] = line.split(/\s+/).map(v => BigInt(v))
-    left.push(a);
-    right.push(b);
-    return [left, right];
-  }, [[0n], [0n]]);
+  return data.split("\n").reduce(
+    ([left, right], line) => {
+      const [a, b] = line.split(/\s+/).map((v) => BigInt(v));
+      left.push(a);
+      right.push(b);
+      return [left, right];
+    },
+    [[0n], [0n]]
+  );
 };
 
 const solvePart1 = () => {

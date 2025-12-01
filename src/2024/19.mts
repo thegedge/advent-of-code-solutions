@@ -1,8 +1,7 @@
-import { readFile } from "node:fs/promises";
 import { sumOf } from "../utils/collections.mts";
-import { memoize } from "../utils/utility.mts";
+import { memoize, readInputFile } from "../utils/utility.mts";
 
-const groups = (await readFile(new URL("", import.meta.url.replace(".mts", ".in")).pathname, "utf-8")).split("\n---\n");
+const groups = await readInputFile(import.meta, "\n---\n");
 
 const readData = (data: string) => {
   const [patterns, designs] = data.split("\n\n");
@@ -26,7 +25,7 @@ const search = memoize((design: string, patterns: string[]): bigint => {
 
 const solvePart1 = () => {
   const results = groups.map(readData).map(([patterns, designs]) => {
-    return sumOf(designs, (design) => search(design, patterns) > 0n ? 1n : 0n);
+    return sumOf(designs, (design) => (search(design, patterns) > 0n ? 1n : 0n));
   });
 
   console.log(results);

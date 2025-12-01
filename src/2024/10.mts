@@ -1,10 +1,10 @@
-import { readFile } from "node:fs/promises";
 import { bfs } from "../utils/bfs.mts";
 import { sumOf } from "../utils/collections.mts";
 import { cardinalDirections, type Coordinate } from "../utils/graphs.mts";
 import { GridMap } from "../utils/GridMap.mts";
+import { readInputFile } from "../utils/utility.mts";
 
-const groups = (await readFile(new URL("", import.meta.url.replace(".mts", ".in")).pathname, "utf-8")).split("\n\n");
+const groups = await readInputFile(import.meta);
 
 class Trail extends GridMap<number | null> {
   override neighbours([row, col]: Coordinate) {

@@ -1,7 +1,7 @@
-import { readFile } from "node:fs/promises";
 import { sumOf } from "../utils/collections.mts";
+import { readInputFile } from "../utils/utility.mts";
 
-const groups = (await readFile(new URL("", import.meta.url.replace(".mts", ".in")).pathname, "utf-8")).split("\n---\n");
+const groups = await readInputFile(import.meta, "\n---\n");
 const readData = (data: string) => {
   const [ordering, updates] = data.split("\n\n");
   const leftRightOrdering = ordering.split("\n").map((v) => v.split("|").map((v) => Number(v)));

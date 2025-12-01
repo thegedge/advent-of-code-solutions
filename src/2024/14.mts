@@ -1,8 +1,8 @@
-import { readFile } from "node:fs/promises";
 import { range, transpose } from "../utils/collections.mts";
 import { dumpMapData, findHorizontalRuns } from "../utils/graphs.mts";
+import { readInputFile } from "../utils/utility.mts";
 
-const groups = (await readFile(new URL("", import.meta.url.replace(".mts", ".in")).pathname, "utf-8")).split("\n\n");
+const groups = await readInputFile(import.meta);
 
 const LINE_REGEX = /p=(?<px>-?\d+),(?<py>-?\d+) v=(?<vx>-?\d+),(?<vy>-?\d+)/;
 
@@ -101,19 +101,23 @@ const findTreePicture = (robots: Robot[], width: number, height: number): [Robot
     // Next, find the horizontal and vertical runs in the map. This will help us detect a frame.
     const horizontalRuns = robotsMap.map((row) => {
       return new Map(
-        findHorizontalRuns(row).map(([start, length]) => {
-          if (length % 2 == 0) {
-            return;
-          }
-          return [start + (length - 1) / 2, length] as const;
-        }).filter((v) => !!v),
+        findHorizontalRuns(row)
+          .map(([start, length]) => {
+            if (length % 2 == 0) {
+              return;
+            }
+            return [start + (length - 1) / 2, length] as const;
+          })
+          .filter((v) => !!v)
       );
     });
     const verticalRuns = transpose(robotsMap).map((row) => {
       return new Map(
-        findHorizontalRuns(row).map(([start, length]) => {
-          return [start + (length - 1) / 2, length] as const;
-        }).filter((v) => !!v),
+        findHorizontalRuns(row)
+          .map(([start, length]) => {
+            return [start + (length - 1) / 2, length] as const;
+          })
+          .filter((v) => !!v)
       );
     });
 
@@ -172,7 +176,10 @@ const solvePart1 = () => {
   const results = groups.map(readData).map((group) => {
     const robots = positionsAfter(group, MAP_WIDTH, MAP_HEIGHT, 100n);
     const quadrants = quadrantCount(robots, MAP_WIDTH, MAP_HEIGHT);
-    return quadrants.flat().filter((count) => count > 0n).reduce((a, b) => a * b, 1n);
+    return quadrants
+      .flat()
+      .filter((count) => count > 0n)
+      .reduce((a, b) => a * b, 1n);
   });
 
   console.log(results);

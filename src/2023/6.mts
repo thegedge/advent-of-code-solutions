@@ -1,7 +1,7 @@
-import { readFile } from "node:fs/promises";
 import { range, sumOf, zip } from "../utils/collections.mts";
+import { readInputFile } from "../utils/utility.mts";
 
-const groups = (await readFile(new URL("", import.meta.url.replace(".mts", ".in")).pathname, "utf-8")).split("\n\n");
+const groups = await readInputFile(import.meta);
 
 const readData1 = (data: string) => {
   const [times, distances] = data.trim().split("\n");

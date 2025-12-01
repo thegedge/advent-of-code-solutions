@@ -1,6 +1,6 @@
-import { readFile } from "node:fs/promises";
+import { readInputFile } from "../utils/utility.mts";
 
-const groups = (await readFile(new URL("", import.meta.url.replace(".mts", ".in")).pathname, "utf-8")).split("\n\n");
+const groups = await readInputFile(import.meta);
 const readData = (data: string) => {
   return data.split("\n");
 };
@@ -24,7 +24,16 @@ const search = (data: string[], x: number, y: number, deltaX: number, deltaY: nu
 
 const solvePart1 = () => {
   const XMAS = ["X", "M", "A", "S"];
-  const XMAS_DIRECTIONS = [[1, 0], [0, 1], [1, 1], [1, -1], [-1, 1], [-1, -1], [-1, 0], [0, -1]];
+  const XMAS_DIRECTIONS = [
+    [1, 0],
+    [0, 1],
+    [1, 1],
+    [1, -1],
+    [-1, 1],
+    [-1, -1],
+    [-1, 0],
+    [0, -1],
+  ];
 
   const countAllXmas = (data: string[]) => {
     let count = 0;

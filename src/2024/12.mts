@@ -1,10 +1,10 @@
-import { readFile } from "node:fs/promises";
 import { bfs } from "../utils/bfs.mts";
 import { transpose } from "../utils/collections.mts";
 import { cardinalDirections, type Coordinate } from "../utils/graphs.mts";
 import { GridMap } from "../utils/GridMap.mts";
+import { readInputFile } from "../utils/utility.mts";
 
-const groups = (await readFile(new URL("", import.meta.url.replace(".mts", ".in")).pathname, "utf-8")).split("\n\n");
+const groups = await readInputFile(import.meta);
 
 const readData = (data: string) => {
   return new Garden(data.split("\n").map((line) => line.split("")));
@@ -14,10 +14,12 @@ class Garden extends GridMap<string | null> {
   override neighbours([row, col]: Coordinate): Coordinate[] {
     const currentValue = this.data[row][col];
 
-    return cardinalDirections([row, col]).filter((coord) => this.withinBounds(coord)).filter(([row, col]) => {
-      const value = this.data[row][col];
-      return currentValue === value;
-    });
+    return cardinalDirections([row, col])
+      .filter((coord) => this.withinBounds(coord))
+      .filter(([row, col]) => {
+        const value = this.data[row][col];
+        return currentValue === value;
+      });
   }
 }
 

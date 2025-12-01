@@ -1,8 +1,16 @@
-import { readFile } from "node:fs/promises";
 import { dijkstra } from "../utils/dijkstra.mts";
-import { Direction, directionDelta, DIRECTIONS, type Graph, numTurns, withinBounds } from "../utils/graphs.mts";
+import {
+  type Direction,
+  directionDelta,
+  DIRECTIONS,
+  EAST,
+  type Graph,
+  numTurns,
+  withinBounds,
+} from "../utils/graphs.mts";
+import { readInputFile } from "../utils/utility.mts";
 
-const groups = (await readFile(new URL("", import.meta.url.replace(".mts", ".in")).pathname, "utf-8")).split("\n\n");
+const groups = await readInputFile(import.meta);
 
 type Node = [row: number, column: number, direction: Direction];
 
@@ -22,7 +30,7 @@ class ReindeerMap implements Graph<string, Node, number> {
   }
 
   nodeFor(key: number): Node {
-    const direction = key % 4;
+    const direction = (key % 4) as Direction;
     key >>= 2;
     return [Math.floor(key / this.data[0].length), key % this.data[0].length, direction];
   }
@@ -65,7 +73,7 @@ const readData = (data: string) => {
 
 const solvePart1 = () => {
   const results = groups.map(readData).map((map, index) => {
-    const source: Node = [...map.findCoord("S")!, Direction.East];
+    const source: Node = [...map.findCoord("S")!, EAST];
     const dest = map.findCoord("E")!;
 
     // We can end up on the final destination facing any direction, so we'll try all of them and
@@ -86,7 +94,7 @@ const solvePart1 = () => {
 
 const solvePart2 = () => {
   const results = groups.map(readData).map((map) => {
-    const source: Node = [...map.findCoord("S")!, Direction.East];
+    const source: Node = [...map.findCoord("S")!, EAST];
     const dest = map.findCoord("E")!;
 
     // We can end up on the final destination facing any direction, so we'll try all of them and

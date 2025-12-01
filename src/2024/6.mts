@@ -1,7 +1,7 @@
-import { readFile } from "node:fs/promises";
 import { withinBounds } from "../utils/graphs.mts";
+import { readInputFile } from "../utils/utility.mts";
 
-const groups = (await readFile(new URL("", import.meta.url.replace(".mts", ".in")).pathname, "utf-8")).split("\n\n");
+const groups = await readInputFile(import.meta);
 const readData = (data: string) => {
   let startCol = 0;
   let startRow = 0;
@@ -95,7 +95,7 @@ const solvePart2 = () => {
         if ((col != startCol || row != startRow) && map[row][col] !== null) {
           // If we're not at the start position or an existing obstruction, place one.
           // Not the fastest approach, but finishes within a few seconds.
-          const mapCopy = map.map((row) => row.map((v) => v == null ? null : []));
+          const mapCopy = map.map((row) => row.map((v) => (v == null ? null : [])));
           mapCopy[row][col] = null;
           count += solve({ startRow, startCol, map: mapCopy }).looped ? 1 : 0;
         }

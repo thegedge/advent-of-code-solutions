@@ -1,7 +1,6 @@
-import { readFile } from "node:fs/promises";
-import { id } from "../utils/utility.mts";
+import { id, readInputFile } from "../utils/utility.mts";
 
-const groups = (await readFile(new URL("", import.meta.url.replace(".mts", ".in")).pathname, "utf-8")).split("\n\n");
+const groups = await readInputFile(import.meta);
 
 const readData = id;
 

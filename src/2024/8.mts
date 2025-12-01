@@ -1,8 +1,8 @@
-import { readFile } from "node:fs/promises";
 import { combinations } from "../utils/collections.mts";
 import { withinBounds } from "../utils/graphs.mts";
+import { readInputFile } from "../utils/utility.mts";
 
-const groups = (await readFile(new URL("", import.meta.url.replace(".mts", ".in")).pathname, "utf-8")).split("\n\n");
+const groups = await readInputFile(import.meta);
 const readData = (data: string) => {
   // Map from node to location
   const positions: Record<string, [number, number][]> = {};
@@ -20,7 +20,11 @@ const readData = (data: string) => {
   return { positions, mapData };
 };
 
-const countAntinodes = ({ positions, mapData }: ReturnType<typeof readData>, iterations: number, countNodes = false) => {
+const countAntinodes = (
+  { positions, mapData }: ReturnType<typeof readData>,
+  iterations: number,
+  countNodes = false
+) => {
   const antiNodes = new Set<string>();
   for (const [_node, locations] of Object.entries(positions)) {
     if (countNodes) {
@@ -35,7 +39,11 @@ const countAntinodes = ({ positions, mapData }: ReturnType<typeof readData>, ite
 
       let possibleAntinodeRow = row1 - rowDelta;
       let possibleAntinodeCol = col1 - colDelta;
-      for (let iteration = 0; iteration < iterations && withinBounds(mapData, [possibleAntinodeRow, possibleAntinodeCol]); iteration++) {
+      for (
+        let iteration = 0;
+        iteration < iterations && withinBounds(mapData, [possibleAntinodeRow, possibleAntinodeCol]);
+        iteration++
+      ) {
         antiNodes.add(`${possibleAntinodeRow},${possibleAntinodeCol}`);
         possibleAntinodeRow -= rowDelta;
         possibleAntinodeCol -= colDelta;
@@ -43,7 +51,11 @@ const countAntinodes = ({ positions, mapData }: ReturnType<typeof readData>, ite
 
       possibleAntinodeRow = row2 + rowDelta;
       possibleAntinodeCol = col2 + colDelta;
-      for (let iteration = 0; iteration < iterations && withinBounds(mapData, [possibleAntinodeRow, possibleAntinodeCol]); iteration++) {
+      for (
+        let iteration = 0;
+        iteration < iterations && withinBounds(mapData, [possibleAntinodeRow, possibleAntinodeCol]);
+        iteration++
+      ) {
         antiNodes.add(`${possibleAntinodeRow},${possibleAntinodeCol}`);
         possibleAntinodeRow += rowDelta;
         possibleAntinodeCol += colDelta;

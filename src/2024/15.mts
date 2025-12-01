@@ -1,27 +1,31 @@
-import { readFile } from "node:fs/promises";
 import { GridMap } from "../utils/GridMap.mts";
+import { readInputFile } from "../utils/utility.mts";
 
-const groups = (await readFile(new URL("", import.meta.url.replace(".mts", ".in")).pathname, "utf-8")).split("\n---\n");
+const groups = await readInputFile(import.meta, "\n---\n");
 
 const readData = (data: string) => {
   const [map, movements] = data.split("\n\n");
   return {
     map: new GridMap(map.split("\n").map((row) => row.split(""))),
-    movements: movements.split("\n").join("").split("").map((movement): [number, number] => {
-      switch (movement) {
-        case "^":
-          return [0, -1];
-        case "v":
-          return [0, 1];
-        case "<":
-          return [-1, 0];
-        case ">":
-          return [1, 0];
-        default:
-          // Unreachable, but making TS happy
-          return [0, 0];
-      }
-    }),
+    movements: movements
+      .split("\n")
+      .join("")
+      .split("")
+      .map((movement): [number, number] => {
+        switch (movement) {
+          case "^":
+            return [0, -1];
+          case "v":
+            return [0, 1];
+          case "<":
+            return [-1, 0];
+          case ">":
+            return [1, 0];
+          default:
+            // Unreachable, but making TS happy
+            return [0, 0];
+        }
+      }),
   };
 };
 
@@ -167,17 +171,19 @@ const solvePart1 = () => {
 
 const solvePart2 = () => {
   const results = groups.map(readData).map(({ map, movements }) => {
-    map = new GridMap(map.data.map((row) =>
-      row.flatMap((v) => {
-        if (v == "." || v == "#") {
-          return [v, v];
-        } else if (v == "O") {
-          return ["[", "]"];
-        } else {
-          return ["@", "."];
-        }
-      })
-    ));
+    map = new GridMap(
+      map.data.map((row) =>
+        row.flatMap((v) => {
+          if (v == "." || v == "#") {
+            return [v, v];
+          } else if (v == "O") {
+            return ["[", "]"];
+          } else {
+            return ["@", "."];
+          }
+        })
+      )
+    );
     let [y, x] = map.findCoords("@")[0];
 
     for (const [deltaX, deltaY] of movements) {

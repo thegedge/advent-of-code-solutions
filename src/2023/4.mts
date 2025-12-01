@@ -1,7 +1,7 @@
-import { readFile } from "node:fs/promises";
 import { sumOf } from "../utils/collections.mts";
+import { readInputFile } from "../utils/utility.mts";
 
-const groups = (await readFile(new URL("", import.meta.url.replace(".mts", ".in")).pathname, "utf-8")).split("\n\n");
+const groups = await readInputFile(import.meta);
 
 const numWinning = (line: string) => {
   const [_cardNum, numbers] = line.split(":");

@@ -1,11 +1,10 @@
-import { readFile } from "node:fs/promises";
 import { cartesianProduct, range, sumOf } from "../utils/collections.mts";
 import { dijkstra } from "../utils/dijkstra.mts";
 import { type Coordinate, type Graph } from "../utils/graphs.mts";
 import { GridMap } from "../utils/GridMap.mts";
-import { id } from "../utils/utility.mts";
+import { id, readInputFile } from "../utils/utility.mts";
 
-const groups = (await readFile(new URL("", import.meta.url.replace(".mts", ".in")).pathname, "utf-8")).split("\n\n");
+const groups = await readInputFile(import.meta);
 
 const readData = (data: string) => {
   return data.split("\n");

@@ -1,7 +1,7 @@
-import { readFile } from "node:fs/promises";
 import { sumOf } from "../utils/collections.mts";
+import { readInputFile } from "../utils/utility.mts";
 
-const groups = (await readFile(new URL("", import.meta.url.replace(".mts", ".in")).pathname, "utf-8")).split("\n\n");
+const groups = await readInputFile(import.meta);
 const readData = (data: string) => {
   return data.split("\n").map((line) => {
     const [result, numbers] = line.split(":");
@@ -31,10 +31,7 @@ const solve = (target: bigint, numbers: bigint[], operators: Operator[]) => {
 };
 
 const solvePart1 = () => {
-  const operators = [
-    (a: bigint, b: bigint) => a + b,
-    (a: bigint, b: bigint) => a * b,
-  ];
+  const operators = [(a: bigint, b: bigint) => a + b, (a: bigint, b: bigint) => a * b];
 
   const results = groups.map(readData).map((group) => {
     return sumOf(group, ([result, numbers]) => {

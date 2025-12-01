@@ -1,9 +1,9 @@
-import { readFile } from "node:fs/promises";
 import { bfs } from "../utils/bfs.mts";
 import { type Coordinate } from "../utils/graphs.mts";
 import { GridMap } from "../utils/GridMap.mts";
+import { readInputFile } from "../utils/utility.mts";
 
-const groups = (await readFile(new URL("", import.meta.url.replace(".mts", ".in")).pathname, "utf-8")).split("\n\n");
+const groups = await readInputFile(import.meta);
 
 const readData = (data: string) => {
   return new ProblemTenMap(data.split("\n").map((line) => line.split("")));

@@ -1,6 +1,6 @@
-import { readFile } from "node:fs/promises";
+import { readInputFile } from "../utils/utility.mts";
 
-const groups = (await readFile(new URL("", import.meta.url.replace(".mts", ".in")).pathname, "utf-8")).split("\n\n");
+const groups = await readInputFile(import.meta);
 
 type LAN = {
   edges: Map<string, Set<string>>;
@@ -68,7 +68,7 @@ const expandCliques = ({ nodes, edges }: LAN, cliques: string[][]): string[][] =
 const solvePart1 = () => {
   const results = groups.map(readData).map(({ edges, nodes }) => {
     return findAllThreeCliques({ edges, nodes }).filter(([nodeA, nodeB, nodeC]) => {
-      return (nodeA.startsWith("t") || nodeB.startsWith("t") || nodeC.startsWith("t"));
+      return nodeA.startsWith("t") || nodeB.startsWith("t") || nodeC.startsWith("t");
     }).length;
   });
 
