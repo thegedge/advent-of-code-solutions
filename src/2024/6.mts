@@ -1,8 +1,6 @@
 import { withinBounds } from "../utils/graphs.mts";
-import { readInputFile } from "../utils/utility.mts";
 
-const groups = await readInputFile(import.meta);
-const readData = (data: string) => {
+export const inputMapper = (data: string) => {
   let startCol = 0;
   let startRow = 0;
 
@@ -48,7 +46,7 @@ const canMove = (map: unknown[][], row: number, col: number, direction: number) 
   return true;
 };
 
-const solve = ({ startRow, startCol, map }: ReturnType<typeof readData>) => {
+const solve = ({ startRow, startCol, map }: ReturnType<typeof inputMapper>) => {
   let direction = 0;
   let col = startCol;
   let row = startRow;
@@ -79,33 +77,22 @@ const solve = ({ startRow, startCol, map }: ReturnType<typeof readData>) => {
   return { distinctCount, looped: false };
 };
 
-const solvePart1 = () => {
-  const results = groups.map(readData).map((data) => {
-    return solve(data).distinctCount;
-  });
-
-  console.log(results);
+export const solvePart1 = (data: ReturnType<typeof inputMapper>) => {
+  return solve(data).distinctCount;
 };
 
-const solvePart2 = () => {
-  const results = groups.map(readData).map(({ startRow, startCol, map }) => {
-    let count = 0;
-    for (let row = 0; row < map.length; ++row) {
-      for (let col = 0; col < map[row].length; ++col) {
-        if ((col != startCol || row != startRow) && map[row][col] !== null) {
-          // If we're not at the start position or an existing obstruction, place one.
-          // Not the fastest approach, but finishes within a few seconds.
-          const mapCopy = map.map((row) => row.map((v) => (v == null ? null : [])));
-          mapCopy[row][col] = null;
-          count += solve({ startRow, startCol, map: mapCopy }).looped ? 1 : 0;
-        }
+export const solvePart2 = ({ startRow, startCol, map }: ReturnType<typeof inputMapper>) => {
+  let count = 0;
+  for (let row = 0; row < map.length; ++row) {
+    for (let col = 0; col < map[row].length; ++col) {
+      if ((col != startCol || row != startRow) && map[row][col] !== null) {
+        // If we're not at the start position or an existing obstruction, place one.
+        // Not the fastest approach, but finishes within a few seconds.
+        const mapCopy = map.map((row) => row.map((v) => (v == null ? null : [])));
+        mapCopy[row][col] = null;
+        count += solve({ startRow, startCol, map: mapCopy }).looped ? 1 : 0;
       }
     }
-    return count;
-  });
-
-  console.log(results);
+  }
+  return count;
 };
-
-solvePart1();
-solvePart2();

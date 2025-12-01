@@ -1,9 +1,7 @@
 import { sumOf } from "../utils/collections.mts";
-import { memoize, readInputFile } from "../utils/utility.mts";
+import { memoize } from "../utils/utility.mts";
 
-const groups = await readInputFile(import.meta);
-
-const readData = (data: string) => {
+export const inputMapper = (data: string) => {
   return data.split(" ").map((num) => BigInt(num));
 };
 
@@ -28,21 +26,10 @@ const blink = memoize((blinks: number, num: bigint): bigint => {
   return blink(blinks - 1, num * 2024n);
 });
 
-const solvePart1 = () => {
-  const results = groups.map(readData).map((group) => {
-    return sumOf(group, (num) => blink(25, num));
-  });
-
-  console.log(results);
+export const solvePart1 = (data: ReturnType<typeof inputMapper>) => {
+  return sumOf(data, (num) => blink(25, num));
 };
 
-const solvePart2 = () => {
-  const results = groups.map(readData).map((group) => {
-    return sumOf(group, (num) => blink(75, num));
-  });
-
-  console.log(results);
+export const solvePart2 = (data: ReturnType<typeof inputMapper>) => {
+  return sumOf(data, (num) => blink(75, num));
 };
-
-solvePart1();
-solvePart2();

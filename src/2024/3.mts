@@ -1,36 +1,23 @@
-import { id, readInputFile } from "../utils/utility.mts";
+import { id } from "../utils/utility.mts";
 
-const groups = await readInputFile(import.meta);
+export const inputMapper = id<string>;
 
-const readData = id;
-
-const solvePart1 = () => {
+export const solvePart1 = (data: ReturnType<typeof inputMapper>) => {
   const regex = /mul\((\d+),(\d+)\)/g;
-  const results = groups.map(readData).map((group) => {
-    return group.matchAll(regex).reduce((value, match) => {
-      return value + BigInt(match[1]) * BigInt(match[2]);
-    }, 0n);
-  });
-
-  console.log(results);
+  return data.matchAll(regex).reduce((value, match) => {
+    return value + BigInt(match[1]) * BigInt(match[2]);
+  }, 0n);
 };
 
-const solvePart2 = () => {
+export const solvePart2 = (data: ReturnType<typeof inputMapper>) => {
   const regex = /mul\((\d+),(\d+)\)|don't\(\)|do\(\)/g;
-  const results = groups.map(readData).map((group) => {
-    let dont = false;
-    return group.matchAll(regex).reduce((value, match) => {
-      if (match[0].startsWith("mul")) {
-        return dont ? value : value + BigInt(match[1]) * BigInt(match[2]);
-      } else {
-        dont = match[0].startsWith("don't");
-        return value;
-      }
-    }, 0n);
-  });
-
-  console.log(results);
+  let dont = false;
+  return data.matchAll(regex).reduce((value, match) => {
+    if (match[0].startsWith("mul")) {
+      return dont ? value : value + BigInt(match[1]) * BigInt(match[2]);
+    } else {
+      dont = match[0].startsWith("don't");
+      return value;
+    }
+  }, 0n);
 };
-
-solvePart1();
-solvePart2();

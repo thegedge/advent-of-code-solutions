@@ -1,8 +1,5 @@
 import { range, transpose } from "../utils/collections.mts";
 import { dumpMapData, findHorizontalRuns } from "../utils/graphs.mts";
-import { readInputFile } from "../utils/utility.mts";
-
-const groups = await readInputFile(import.meta);
 
 const LINE_REGEX = /p=(?<px>-?\d+),(?<py>-?\d+) v=(?<vx>-?\d+),(?<vy>-?\d+)/;
 
@@ -13,7 +10,7 @@ type Robot = {
   vy: number;
 };
 
-const readData = (data: string) => {
+export const inputMapper = (data: string) => {
   return data.split("\n").map((line): Robot => {
     const { px, py, vx, vy } = LINE_REGEX.exec(line)!.groups!;
     return {
@@ -145,6 +142,7 @@ const findTreePicture = (robots: Robot[], width: number, height: number): [Robot
         // I just happened to be debugging with this, but it found the solution
         frames.push([row, center]);
         return;
+
         if (leftLength == rightLength && leftLength >= 16) {
           // Okay, we nearly have a frame. We have a top and two sides. Is there a bottom?
           const bottomRuns = horizontalRuns[row + leftLength];
@@ -172,33 +170,22 @@ const debugRobots = (robots: Robot[], width: number, height: number) => {
 const MAP_WIDTH = 101;
 const MAP_HEIGHT = 103;
 
-const solvePart1 = () => {
-  const results = groups.map(readData).map((group) => {
-    const robots = positionsAfter(group, MAP_WIDTH, MAP_HEIGHT, 100n);
-    const quadrants = quadrantCount(robots, MAP_WIDTH, MAP_HEIGHT);
-    return quadrants
-      .flat()
-      .filter((count) => count > 0n)
-      .reduce((a, b) => a * b, 1n);
-  });
-
-  console.log(results);
+export const solvePart1 = (data: ReturnType<typeof inputMapper>) => {
+  const robots = positionsAfter(data, MAP_WIDTH, MAP_HEIGHT, 100n);
+  const quadrants = quadrantCount(robots, MAP_WIDTH, MAP_HEIGHT);
+  return quadrants
+    .flat()
+    .filter((count) => count > 0n)
+    .reduce((a, b) => a * b, 1n);
 };
 
-const solvePart2 = () => {
-  const results = groups.map(readData).map((group) => {
-    // Skip the first example
-    if (group.length < 20) {
-      return null;
-    }
+export const solvePart2 = (data: ReturnType<typeof inputMapper>) => {
+  // Skip the first example
+  if (data.length < 20) {
+    return null;
+  }
 
-    const [robots, numMoves] = findTreePicture(group, MAP_WIDTH, MAP_HEIGHT);
-    debugRobots(robots, MAP_WIDTH, MAP_HEIGHT);
-    return numMoves;
-  });
-
-  console.log(results);
+  const [robots, numMoves] = findTreePicture(data, MAP_WIDTH, MAP_HEIGHT);
+  debugRobots(robots, MAP_WIDTH, MAP_HEIGHT);
+  return numMoves;
 };
-
-solvePart1();
-solvePart2();

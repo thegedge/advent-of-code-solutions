@@ -1,7 +1,4 @@
 import { sumOf } from "../utils/collections.mts";
-import { readInputFile } from "../utils/utility.mts";
-
-const groups = await readInputFile(import.meta);
 
 const numWinning = (line: string) => {
   const [_cardNum, numbers] = line.split(":");
@@ -15,33 +12,24 @@ const numWinning = (line: string) => {
   return sumOf(winning, (n) => (card.includes(n) ? 1n : 0n));
 };
 
-const solvePart1 = () => {
-  const results = groups.map((group) => {
-    return sumOf(group.split("\n"), (line) => {
-      const result = numWinning(line);
-      return result == 0n ? 0n : 1n << (result - 1n);
-    });
-  });
-
-  console.log(results);
+export const inputMapper = (data: string) => {
+  return data.split("\n").map((line) => numWinning(line));
 };
 
-const solvePart2 = () => {
-  const results = groups.map((group) => {
-    const counts: Record<string, bigint> = {};
-    return sumOf(group.split("\n"), (line, index) => {
-      const myCount = 1n + (counts[index] || 0n);
-      const num = numWinning(line);
-      for (let i = 1; i <= num; i++) {
-        counts[index + i] ??= 0n;
-        counts[index + i] += myCount;
-      }
-      return myCount;
-    });
+export const solvePart1 = (data: ReturnType<typeof inputMapper>) => {
+  return sumOf(data, (num) => {
+    return num == 0n ? 0n : 1n << (num - 1n);
   });
-
-  console.log(results);
 };
 
-solvePart1();
-solvePart2();
+export const solvePart2 = (data: ReturnType<typeof inputMapper>) => {
+  const counts: Record<string, bigint> = {};
+  return sumOf(data, (num, index) => {
+    const myCount = 1n + (counts[index] || 0n);
+    for (let i = 1; i <= num; i++) {
+      counts[index + i] ??= 0n;
+      counts[index + i] += myCount;
+    }
+    return myCount;
+  });
+};

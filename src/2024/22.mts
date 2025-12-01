@@ -1,9 +1,6 @@
 import { maxOf, range, sumOf } from "../utils/collections.mts";
-import { readInputFile } from "../utils/utility.mts";
 
-const groups = await readInputFile(import.meta);
-
-const readData = (data: string) => {
+export const inputMapper = (data: string) => {
   return data.split("\n").map((v) => BigInt(v));
 };
 
@@ -23,58 +20,47 @@ const secretGenerator = function* (secret: bigint) {
   }
 };
 
-const solvePart1 = () => {
-  const results = groups.map(readData).map((group) => {
-    return sumOf(group, (value) => {
-      return secretGenerator(value).find((v, index) => index == 2000)!;
-    });
+export const solvePart1 = (data: ReturnType<typeof inputMapper>) => {
+  return sumOf(data, (value) => {
+    return secretGenerator(value).find((v, index) => index == 2000)!;
   });
-
-  console.log(results);
 };
 
 // 2237 too high
 
-const solvePart2 = () => {
+export const solvePart2 = (data: ReturnType<typeof inputMapper>) => {
   // Not the fastest solution, but it works.
   //
   // We just create a map that maps from a stringified version of the price differences to an array
   // of max buyer price for the price where that set of differences first occurs.
-  const results = groups.map(readData).map((group) => {
-    const map = new Map<string, (bigint | null)[]>();
-    group.forEach((secret, buyerIndex) => {
-      const prices = secretGenerator(secret)
-        .take(2001)
-        .map((v) => BigInt(String(v).slice(-1)))
-        .toArray();
+  const map = new Map<string, (bigint | null)[]>();
+  data.forEach((secret, buyerIndex) => {
+    const prices = secretGenerator(secret)
+      .take(2001)
+      .map((v) => BigInt(String(v).slice(-1)))
+      .toArray();
 
-      prices.forEach((v, index) => {
-        if (index < 4) return;
+    prices.forEach((v, index) => {
+      if (index < 4) return;
 
-        const a = prices[index - 4];
-        const b = prices[index - 3];
-        const c = prices[index - 2];
-        const d = prices[index - 1];
+      const a = prices[index - 4];
+      const b = prices[index - 3];
+      const c = prices[index - 2];
+      const d = prices[index - 1];
 
-        const key = `${b - a},${c - b},${d - c},${v - d}`;
+      const key = `${b - a},${c - b},${d - c},${v - d}`;
 
-        let array = map.get(key);
-        if (!array) {
-          array = range(group.length).map(() => null);
-          map.set(key, array);
-        }
+      let array = map.get(key);
+      if (!array) {
+        array = range(data.length).map(() => null);
+        map.set(key, array);
+      }
 
-        array[buyerIndex] ??= v;
-      });
-    });
-
-    return maxOf(map.values(), (prices) => {
-      return sumOf(prices, (v) => v ?? 0n);
+      array[buyerIndex] ??= v;
     });
   });
 
-  console.log(results);
+  return maxOf(map.values(), (prices) => {
+    return sumOf(prices, (v) => v ?? 0n);
+  });
 };
-
-solvePart1();
-solvePart2();

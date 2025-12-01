@@ -1,9 +1,6 @@
 import { bfs } from "../utils/bfs.mts";
 import { type Coordinate } from "../utils/graphs.mts";
 import { GridMap } from "../utils/GridMap.mts";
-import { readInputFile } from "../utils/utility.mts";
-
-const groups = await readInputFile(import.meta);
 
 type Node = readonly [...Coordinate, numCheatsLeft: number];
 
@@ -13,7 +10,7 @@ class Racetrack extends GridMap<string> {
   }
 }
 
-const readData = (data: string) => {
+export const inputMapper = (data: string) => {
   return new Racetrack(data.split("\n").map((line) => line.split("")));
 };
 
@@ -76,21 +73,10 @@ const solve = (racetrack: Racetrack, cheatLength: number) => {
   return count;
 };
 
-const solvePart1 = () => {
-  const results = groups.map(readData).map((racetrack) => {
-    return solve(racetrack, 2);
-  });
-
-  console.log(results);
+export const solvePart1 = (data: ReturnType<typeof inputMapper>) => {
+  return solve(data, 2);
 };
 
-const solvePart2 = () => {
-  const results = groups.map(readData).map((racetrack) => {
-    return solve(racetrack, 20);
-  });
-
-  console.log(results);
+export const solvePart2 = (data: ReturnType<typeof inputMapper>) => {
+  return solve(data, 20);
 };
-
-solvePart1();
-solvePart2();

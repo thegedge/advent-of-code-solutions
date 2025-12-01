@@ -1,28 +1,13 @@
-import { readInputFile } from "../utils/utility.mts";
-
-const groups = await readInputFile(import.meta);
-
-const readData = (data: string) => {
+export const inputMapper = (data: string) => {
   return data.split("\n").map((line) => {
     //
   });
 };
 
-const solvePart1 = () => {
-  const results = groups.map(readData).map((hands) => {
-    //
-  });
-
-  console.log(results);
+export const solvePart1 = (data: ReturnType<typeof inputMapper>) => {
+  //
 };
 
-const solvePart2 = () => {
-  const results = groups.map(readData).map((hands) => {
-    //
-  });
-
-  console.log(results);
+export const solvePart2 = (data: ReturnType<typeof inputMapper>) => {
+  //
 };
-
-solvePart1();
-solvePart2();

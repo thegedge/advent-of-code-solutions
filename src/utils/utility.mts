@@ -1,4 +1,5 @@
-import { readFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { dirname } from "node:path";
 
 export const tee = <T,>(v: T): T => {
   console.log(v);
@@ -29,9 +30,22 @@ export const memoize = <ArgsT extends unknown[], ReturnT>(
   };
 };
 
-// TODO just have a wrapper script that takes a year / problem # and reads in that file, expecting some exports
-//      (e.g., solvePart1, solvePart2, dataMapper) and runs it.
-export const readInputFile = async (meta: ImportMeta, delimiter = "\n\n") => {
-  const input = meta.filename.replace(/\.[^.]+$/, ".in");
-  return (await readFile(input, "utf-8")).split(delimiter);
-};
+/**
+ * Reads from a file.
+ *
+ * If the file doesn't exist, the given function is called and the result is cached at that location.
+ */
+export const cachedRead = memoize(async (filepath: string, f: () => string | Promise<string>) => {
+  const cachePath = `.cache/${filepath}`;
+  try {
+    return await readFile(cachePath, "utf-8");
+  } catch (error) {
+    const data = await f();
+
+    const path = dirname(cachePath);
+    await mkdir(path, { recursive: true });
+    await writeFile(cachePath, data);
+
+    return data;
+  }
+});

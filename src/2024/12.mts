@@ -2,11 +2,8 @@ import { bfs } from "../utils/bfs.mts";
 import { transpose } from "../utils/collections.mts";
 import { cardinalDirections, type Coordinate } from "../utils/graphs.mts";
 import { GridMap } from "../utils/GridMap.mts";
-import { readInputFile } from "../utils/utility.mts";
 
-const groups = await readInputFile(import.meta);
-
-const readData = (data: string) => {
+export const inputMapper = (data: string) => {
   return new Garden(data.split("\n").map((line) => line.split("")));
 };
 
@@ -43,6 +40,7 @@ const floodFillPerimeter = (garden: Garden, coord: Coordinate) => {
 
   return { area, perimeter };
 };
+
 //
 // We do this by counting the "crossings", that is, when moving from left to right we pass from outside the plot
 // into the plot, or vice versa. That means we've crossed a vertical side.
@@ -124,41 +122,30 @@ const floodFillSides = (garden: Garden, coord: Coordinate) => {
   return { area, sides };
 };
 
-const solvePart1 = () => {
-  const results = groups.map(readData).map((garden) => {
-    let sum = 0;
-    garden.forEach((value, coord) => {
-      if (value == null) {
-        return;
-      }
+export const solvePart1 = (garden: ReturnType<typeof inputMapper>) => {
+  let sum = 0;
+  garden.forEach((value, coord) => {
+    if (value == null) {
+      return;
+    }
 
-      const { area, perimeter } = floodFillPerimeter(garden, coord);
+    const { area, perimeter } = floodFillPerimeter(garden, coord);
 
-      sum += coord ? area * perimeter : 0;
-    });
-    return sum;
+    sum += coord ? area * perimeter : 0;
   });
-
-  console.log(results);
+  return sum;
 };
 
-const solvePart2 = () => {
-  const results = groups.map(readData).map((garden) => {
-    let sum = 0;
-    garden.forEach((value, coord) => {
-      if (value == null) {
-        return;
-      }
+export const solvePart2 = (garden: ReturnType<typeof inputMapper>) => {
+  let sum = 0;
+  garden.forEach((value, coord) => {
+    if (value == null) {
+      return;
+    }
 
-      const { area, sides } = floodFillSides(garden, coord);
+    const { area, sides } = floodFillSides(garden, coord);
 
-      sum += coord ? area * sides : 0;
-    });
-    return sum;
+    sum += coord ? area * sides : 0;
   });
-
-  console.log(results);
+  return sum;
 };
-
-solvePart1();
-solvePart2();

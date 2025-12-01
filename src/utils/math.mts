@@ -42,7 +42,7 @@ export const lcm = (...numbers: bigint[]): bigint => {
 };
 
 export const abs = (a: bigint): bigint => {
-  return a < 0 ? -a : a;
+  return a < 0n ? -a : a;
 };
 
 export const min = <T extends bigint | number>(a: T, b: T): T => {
@@ -71,7 +71,14 @@ export const max = <T extends bigint | number>(a: T, b: T): T => {
  *   a * x + b * y = c
  *   d * x + e * y = f
  */
-export const solveSystem = (a: bigint, b: bigint, c: bigint, d: bigint, e: bigint, f: bigint): [bigint, bigint] | null => {
+export const solveSystem = (
+  a: bigint,
+  b: bigint,
+  c: bigint,
+  d: bigint,
+  e: bigint,
+  f: bigint
+): [bigint, bigint] | null => {
   // We can solve this system by rearranging the first equation for x:
   //   x = (c - b * y) / a
   //

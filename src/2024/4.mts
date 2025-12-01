@@ -1,7 +1,4 @@
-import { readInputFile } from "../utils/utility.mts";
-
-const groups = await readInputFile(import.meta);
-const readData = (data: string) => {
+export const inputMapper = (data: string) => {
   return data.split("\n");
 };
 
@@ -22,7 +19,7 @@ const search = (data: string[], x: number, y: number, deltaX: number, deltaY: nu
   return true;
 };
 
-const solvePart1 = () => {
+export const solvePart1 = (data: ReturnType<typeof inputMapper>) => {
   const XMAS = ["X", "M", "A", "S"];
   const XMAS_DIRECTIONS = [
     [1, 0],
@@ -51,14 +48,10 @@ const solvePart1 = () => {
     return count;
   };
 
-  const results = groups.map(readData).map((group) => {
-    return countAllXmas(group);
-  });
-
-  console.log(results);
+  return countAllXmas(data);
 };
 
-const solvePart2 = () => {
+export const solvePart2 = (data: ReturnType<typeof inputMapper>) => {
   const MAS = ["M", "A", "S"];
 
   const countAllMas = (data: string[]) => {
@@ -80,12 +73,5 @@ const solvePart2 = () => {
     return count;
   };
 
-  const results = groups.map(readData).map((group) => {
-    return countAllMas(group);
-  });
-
-  console.log(results);
+  return countAllMas(data);
 };
-
-solvePart1();
-solvePart2();

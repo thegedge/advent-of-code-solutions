@@ -1,8 +1,5 @@
 import { merge, sumOf } from "../utils/collections.mts";
 import { max } from "../utils/math.mts";
-import { readInputFile } from "../utils/utility.mts";
-
-const groups = await readInputFile(import.meta);
 
 const parseLine = (game: string) => {
   const [head, tail] = game.split(":");
@@ -23,35 +20,26 @@ const parseLine = (game: string) => {
   };
 };
 
-const solvePart1 = () => {
-  const results = groups.map((lines) => {
-    const games = lines.split("\n").map((line) => parseLine(line));
-    return sumOf(games, ({ id, games }) => {
-      return games.every((show) => show.red <= 12 && show.green <= 13 && show.blue <= 15) ? id : 0n;
-    });
-  });
-
-  console.log(results);
+export const inputMapper = (data: string) => {
+  return data.split("\n").map((line) => parseLine(line));
 };
 
-const solvePart2 = () => {
-  const results = groups.map((lines) => {
-    const games = lines.split("\n").map((line) => parseLine(line));
-    return games.reduce((sum, { games }) => {
-      let minR = 0n;
-      let minG = 0n;
-      let minB = 0n;
-      for (const show of games) {
-        minR = max(minR, show.red);
-        minG = max(minG, show.green);
-        minB = max(minB, show.blue);
-      }
-      return sum + BigInt(minR) * BigInt(minG) * BigInt(minB);
-    }, 0n);
+export const solvePart1 = (data: ReturnType<typeof inputMapper>) => {
+  return sumOf(data, ({ id, games }) => {
+    return games.every((show) => show.red <= 12 && show.green <= 13 && show.blue <= 15) ? id : 0n;
   });
-
-  console.log(results);
 };
 
-solvePart1();
-solvePart2();
+export const solvePart2 = (data: ReturnType<typeof inputMapper>) => {
+  return data.reduce((sum, { games }) => {
+    let minR = 0n;
+    let minG = 0n;
+    let minB = 0n;
+    for (const show of games) {
+      minR = max(minR, show.red);
+      minG = max(minG, show.green);
+      minB = max(minB, show.blue);
+    }
+    return sum + BigInt(minR) * BigInt(minG) * BigInt(minB);
+  }, 0n);
+};

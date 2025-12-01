@@ -2,11 +2,9 @@ import { cartesianProduct, range, sumOf } from "../utils/collections.mts";
 import { dijkstra } from "../utils/dijkstra.mts";
 import { type Coordinate, type Graph } from "../utils/graphs.mts";
 import { GridMap } from "../utils/GridMap.mts";
-import { id, readInputFile } from "../utils/utility.mts";
+import { id } from "../utils/utility.mts";
 
-const groups = await readInputFile(import.meta);
-
-const readData = (data: string) => {
+export const inputMapper = (data: string) => {
   return data.split("\n");
 };
 
@@ -231,54 +229,43 @@ const movement = (from: Coordinate, to: Coordinate): Direction | null => {
   return null;
 };
 
-const solvePart1 = () => {
-  const results = groups.map(readData).map((group) => {
-    const graph = new System(2);
+export const solvePart1 = (data: ReturnType<typeof inputMapper>) => {
+  const graph = new System(2);
 
-    return sumOf(group, (line) => {
-      const totalDistance = sumOf(range(line.length), (index) => {
-        const distanceBetweenKeypadDigits = dijkstra(graph, {
-          source: graph.nodeForString(`${index == 0 ? "A" : line[index - 1]}AA` as any),
-          destination: graph.nodeForString(`${line[index]}AA` as any),
-        });
-
-        // + 1 because the above only gets us to the state we need to be in to press the right key on
-        // the keypad, but we still need to have the human press the activate button to log it.
-        return BigInt(distanceBetweenKeypadDigits + 1);
+  return sumOf(data, (line) => {
+    const totalDistance = sumOf(range(line.length), (index) => {
+      const distanceBetweenKeypadDigits = dijkstra(graph, {
+        source: graph.nodeForString(`${index == 0 ? "A" : line[index - 1]}AA` as any),
+        destination: graph.nodeForString(`${line[index]}AA` as any),
       });
 
-      // console.log(line, totalDistance, totalDistance * BigInt(parseInt(line)));
-      return totalDistance * BigInt(parseInt(line));
+      // + 1 because the above only gets us to the state we need to be in to press the right key on
+      // the keypad, but we still need to have the human press the activate button to log it.
+      return BigInt(distanceBetweenKeypadDigits + 1);
     });
-  });
 
-  console.log(results);
+    // console.log(line, totalDistance, totalDistance * BigInt(parseInt(line)));
+    return totalDistance * BigInt(parseInt(line));
+  });
 };
 
-const solvePart2 = () => {
-  const results = groups.map(readData).map((group) => {
-    const graph = new System(3);
-    const suffix = "A".repeat(3);
+export const solvePart2 = (data: ReturnType<typeof inputMapper>) => {
+  const graph = new System(3);
+  const suffix = "A".repeat(3);
 
-    return sumOf(group, (line) => {
-      const totalDistance = sumOf(range(line.length), (index) => {
-        const distanceBetweenKeypadDigits = dijkstra(graph, {
-          source: graph.nodeForString(`${index == 0 ? "A" : line[index - 1]}${suffix}` as any),
-          destination: graph.nodeForString(`${line[index]}${suffix}` as any),
-        });
-
-        // + 1 because the above only gets us to the state we need to be in to press the right key on
-        // the keypad, but we still need to have the human press the activate button to log it.
-        return BigInt(distanceBetweenKeypadDigits + 1);
+  return sumOf(data, (line) => {
+    const totalDistance = sumOf(range(line.length), (index) => {
+      const distanceBetweenKeypadDigits = dijkstra(graph, {
+        source: graph.nodeForString(`${index == 0 ? "A" : line[index - 1]}${suffix}` as any),
+        destination: graph.nodeForString(`${line[index]}${suffix}` as any),
       });
 
-      // console.log(line, totalDistance, totalDistance * BigInt(parseInt(line)));
-      return totalDistance * BigInt(parseInt(line));
+      // + 1 because the above only gets us to the state we need to be in to press the right key on
+      // the keypad, but we still need to have the human press the activate button to log it.
+      return BigInt(distanceBetweenKeypadDigits + 1);
     });
+
+    // console.log(line, totalDistance, totalDistance * BigInt(parseInt(line)));
+    return totalDistance * BigInt(parseInt(line));
   });
-
-  console.log(results);
 };
-
-solvePart1();
-solvePart2();

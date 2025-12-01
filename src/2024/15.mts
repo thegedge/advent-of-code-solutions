@@ -1,9 +1,6 @@
 import { GridMap } from "../utils/GridMap.mts";
-import { readInputFile } from "../utils/utility.mts";
 
-const groups = await readInputFile(import.meta, "\n---\n");
-
-const readData = (data: string) => {
+export const inputMapper = (data: string) => {
   const [map, movements] = data.split("\n\n");
   return {
     map: new GridMap(map.split("\n").map((row) => row.split(""))),
@@ -144,71 +141,60 @@ const maybeMoveBoxes2 = (map: RobotMap, x: number, y: number, deltaX: number, de
   return true;
 };
 
-const solvePart1 = () => {
-  const results = groups.map(readData).map(({ map, movements }, index) => {
-    let [y, x] = map.findCoords("@")[0];
+export const solvePart1 = ({ map, movements }: ReturnType<typeof inputMapper>) => {
+  let [y, x] = map.findCoords("@")[0];
 
-    for (const [deltaX, deltaY] of movements) {
-      if (maybeMoveBoxes1(map, x, y, deltaX, deltaY)) {
-        map.data[y][x] = ".";
-        x += deltaX;
-        y += deltaY;
-        map.data[y][x] = "@";
-      }
+  for (const [deltaX, deltaY] of movements) {
+    if (maybeMoveBoxes1(map, x, y, deltaX, deltaY)) {
+      map.data[y][x] = ".";
+      x += deltaX;
+      y += deltaY;
+      map.data[y][x] = "@";
     }
+  }
 
-    let sum = 0;
-    map.forEach((value, [row, col]) => {
-      if (value == "O") {
-        sum += 100 * row + col;
-      }
-    });
-    return sum;
+  let sum = 0;
+  map.forEach((value, [row, col]) => {
+    if (value == "O") {
+      sum += 100 * row + col;
+    }
   });
-
-  console.log(results);
+  return sum;
 };
 
-const solvePart2 = () => {
-  const results = groups.map(readData).map(({ map, movements }) => {
-    map = new GridMap(
-      map.data.map((row) =>
-        row.flatMap((v) => {
-          if (v == "." || v == "#") {
-            return [v, v];
-          } else if (v == "O") {
-            return ["[", "]"];
-          } else {
-            return ["@", "."];
-          }
-        })
-      )
-    );
-    let [y, x] = map.findCoords("@")[0];
+export const solvePart2 = ({ map: inputMap, movements }: ReturnType<typeof inputMapper>) => {
+  const map = new GridMap(
+    inputMap.data.map((row) =>
+      row.flatMap((v) => {
+        if (v == "." || v == "#") {
+          return [v, v];
+        } else if (v == "O") {
+          return ["[", "]"];
+        } else {
+          return ["@", "."];
+        }
+      })
+    )
+  );
+  let [y, x] = map.findCoords("@")[0];
 
-    for (const [deltaX, deltaY] of movements) {
-      // console.log(map.dump());
-      // console.log(deltaX, deltaY);
-      if (maybeMoveBoxes2(map, x, y, deltaX, deltaY)) {
-        map.data[y][x] = ".";
-        x += deltaX;
-        y += deltaY;
-        map.data[y][x] = "@";
-      }
-    }
+  for (const [deltaX, deltaY] of movements) {
     // console.log(map.dump());
+    // console.log(deltaX, deltaY);
+    if (maybeMoveBoxes2(map, x, y, deltaX, deltaY)) {
+      map.data[y][x] = ".";
+      x += deltaX;
+      y += deltaY;
+      map.data[y][x] = "@";
+    }
+  }
+  // console.log(map.dump());
 
-    let sum = 0;
-    map.forEach((value, [row, col]) => {
-      if (value == "[") {
-        sum += 100 * row + col;
-      }
-    });
-    return sum;
+  let sum = 0;
+  map.forEach((value, [row, col]) => {
+    if (value == "[") {
+      sum += 100 * row + col;
+    }
   });
-
-  console.log(results);
+  return sum;
 };
-
-solvePart1();
-solvePart2();

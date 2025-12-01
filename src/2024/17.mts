@@ -1,10 +1,7 @@
-import { readInputFile } from "../utils/utility.mts";
-
-const groups = await readInputFile(import.meta, "\n---\n");
-
 type Opcode = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+type Program = ReturnType<typeof inputMapper>;
 
-const readData = (data: string) => {
+export const inputMapper = (data: string) => {
   const REGISTER_REGEX = /Register (\w+): (\d+)/;
   const [registers, instructions] = data.split("\n\n");
   return {
@@ -20,8 +17,6 @@ const readData = (data: string) => {
       .map((v) => parseInt(v) as Opcode),
   };
 };
-
-type Program = ReturnType<typeof readData>;
 
 const combo = (registers: Program["registers"], n: number) => {
   switch (n) {
@@ -121,12 +116,8 @@ const run = (program: Program) => {
   return out.join(",");
 };
 
-const solvePart1 = () => {
-  const results = groups.map(readData).map((program) => {
-    return run(program);
-  });
-
-  console.log(results);
+export const solvePart1 = (data: ReturnType<typeof inputMapper>) => {
+  return run(data);
 };
 
 // Playing around with the given example from part two – 117440, or 0o345300 – you can find an
@@ -393,30 +384,23 @@ const solvePart1 = () => {
 // After I wrote that solution, I was happy to see it works for the other example too :)
 //
 
-const solvePart2 = () => {
-  const results = groups.map(readData).map((program) => {
-    const solutions = [0n];
-    for (let digitIndex = program.instructions.length - 1; digitIndex >= 0; digitIndex--) {
-      const expected = program.instructions[digitIndex];
-      const potentialSolutions = solutions.splice(0);
-      for (const solution of potentialSolutions) {
-        for (let digit = 0; digit < 8; digit++) {
-          const registerA = solution | (BigInt(digit) << (3n * BigInt(digitIndex)));
-          const maybeSolution = run({ ...program, registers: { ...program.registers, A: registerA } });
-          if (Number(maybeSolution.split(",")[digitIndex]) === expected) {
-            solutions.push(registerA);
-          }
+export const solvePart2 = (data: ReturnType<typeof inputMapper>) => {
+  const solutions = [0n];
+  for (let digitIndex = data.instructions.length - 1; digitIndex >= 0; digitIndex--) {
+    const expected = data.instructions[digitIndex];
+    const potentialSolutions = solutions.splice(0);
+    for (const solution of potentialSolutions) {
+      for (let digit = 0; digit < 8; digit++) {
+        const registerA = solution | (BigInt(digit) << (3n * BigInt(digitIndex)));
+        const maybeSolution = run({ ...data, registers: { ...data.registers, A: registerA } });
+        if (Number(maybeSolution.split(",")[digitIndex]) === expected) {
+          solutions.push(registerA);
         }
       }
     }
+  }
 
-    // The number of digits, base 8, is the same as the output.
-    // We start by trying to find the first octal digit that matches the output and work our way back.
-    return solutions.join(" | ");
-  });
-
-  console.log(results);
+  // The number of digits, base 8, is the same as the output.
+  // We start by trying to find the first octal digit that matches the output and work our way back.
+  return solutions.join(" | ");
 };
-
-solvePart1();
-solvePart2();

@@ -1,8 +1,6 @@
 import { sumOf } from "../utils/collections.mts";
-import { readInputFile } from "../utils/utility.mts";
 
-const groups = await readInputFile(import.meta);
-const readData = (data: string) => {
+export const inputMapper = (data: string) => {
   return data.split("\n").map((line) => {
     const [result, numbers] = line.split(":");
     return [BigInt(result), numbers.split(" ").map((v) => BigInt(v))] as const;
@@ -30,33 +28,22 @@ const solve = (target: bigint, numbers: bigint[], operators: Operator[]) => {
   return recurse(value, numbers);
 };
 
-const solvePart1 = () => {
+export const solvePart1 = (data: ReturnType<typeof inputMapper>) => {
   const operators = [(a: bigint, b: bigint) => a + b, (a: bigint, b: bigint) => a * b];
 
-  const results = groups.map(readData).map((group) => {
-    return sumOf(group, ([result, numbers]) => {
-      return solve(result, numbers, operators) ? result : 0n;
-    });
+  return sumOf(data, ([result, numbers]) => {
+    return solve(result, numbers, operators) ? result : 0n;
   });
-
-  console.log(results);
 };
 
-const solvePart2 = () => {
+export const solvePart2 = (data: ReturnType<typeof inputMapper>) => {
   const operators = [
     (a: bigint, b: bigint) => a + b,
     (a: bigint, b: bigint) => a * b,
     (a: bigint, b: bigint) => BigInt(String(a) + String(b)),
   ];
 
-  const results = groups.map(readData).map((group) => {
-    return sumOf(group, ([result, numbers]) => {
-      return solve(result, numbers, operators) ? result : 0n;
-    });
+  return sumOf(data, ([result, numbers]) => {
+    return solve(result, numbers, operators) ? result : 0n;
   });
-
-  console.log(results);
 };
-
-solvePart1();
-solvePart2();

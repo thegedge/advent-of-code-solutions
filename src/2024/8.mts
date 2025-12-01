@@ -1,9 +1,7 @@
 import { combinations } from "../utils/collections.mts";
 import { withinBounds } from "../utils/graphs.mts";
-import { readInputFile } from "../utils/utility.mts";
 
-const groups = await readInputFile(import.meta);
-const readData = (data: string) => {
+export const inputMapper = (data: string) => {
   // Map from node to location
   const positions: Record<string, [number, number][]> = {};
   const mapData = data.split("\n").map((line, row) => {
@@ -21,7 +19,7 @@ const readData = (data: string) => {
 };
 
 const countAntinodes = (
-  { positions, mapData }: ReturnType<typeof readData>,
+  { positions, mapData }: ReturnType<typeof inputMapper>,
   iterations: number,
   countNodes = false
 ) => {
@@ -75,21 +73,10 @@ const countAntinodes = (
   return antiNodes.size;
 };
 
-const solvePart1 = () => {
-  const results = groups.map(readData).map((data) => {
-    return countAntinodes(data, 1);
-  });
-
-  console.log(results);
+export const solvePart1 = (data: ReturnType<typeof inputMapper>) => {
+  return countAntinodes(data, 1);
 };
 
-const solvePart2 = () => {
-  const results = groups.map(readData).map((data) => {
-    return countAntinodes(data, Number.POSITIVE_INFINITY, true);
-  });
-
-  console.log(results);
+export const solvePart2 = (data: ReturnType<typeof inputMapper>) => {
+  return countAntinodes(data, Number.POSITIVE_INFINITY, true);
 };
-
-solvePart1();
-solvePart2();

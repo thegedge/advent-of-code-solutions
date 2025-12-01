@@ -1,2 +1,4 @@
 node_modules/
 *.in
+.envrc
+.cache

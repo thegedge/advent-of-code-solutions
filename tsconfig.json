@@ -31,6 +31,6 @@
     "noImplicitOverride": true
   },
 
-  "include": ["./src"],
+  "include": ["./src", "runner.mts"],
   "exclude": ["node_modules", "dist"]
 }

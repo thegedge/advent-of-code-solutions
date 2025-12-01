@@ -1,13 +1,9 @@
-import { readInputFile } from "../utils/utility.mts";
-
-const groups = await readInputFile(import.meta);
-
 type LAN = {
   edges: Map<string, Set<string>>;
   nodes: string[];
 };
 
-const readData = (data: string): LAN => {
+export const inputMapper = (data: string): LAN => {
   const edges = new Map<string, Set<string>>();
   for (const line of data.split("\n")) {
     const [a, b] = line.split("-");
@@ -65,31 +61,20 @@ const expandCliques = ({ nodes, edges }: LAN, cliques: string[][]): string[][] =
   return newCliques;
 };
 
-const solvePart1 = () => {
-  const results = groups.map(readData).map(({ edges, nodes }) => {
-    return findAllThreeCliques({ edges, nodes }).filter(([nodeA, nodeB, nodeC]) => {
-      return nodeA.startsWith("t") || nodeB.startsWith("t") || nodeC.startsWith("t");
-    }).length;
-  });
-
-  console.log(results);
+export const solvePart1 = ({ edges, nodes }: ReturnType<typeof inputMapper>) => {
+  return findAllThreeCliques({ edges, nodes }).filter(([nodeA, nodeB, nodeC]) => {
+    return nodeA.startsWith("t") || nodeB.startsWith("t") || nodeC.startsWith("t");
+  }).length;
 };
 
-const solvePart2 = () => {
-  const results = groups.map(readData).map(({ edges, nodes }) => {
-    let cliques = findAllThreeCliques({ edges, nodes });
-    while (cliques.length > 0) {
-      // Take all the three cliques, and repeatedly expand them by one node until there's no larger clique
-      const newCliques = expandCliques({ edges, nodes }, cliques);
-      if (newCliques.length == 0) {
-        return cliques[0].join(",");
-      }
-      cliques = newCliques;
+export const solvePart2 = ({ edges, nodes }: ReturnType<typeof inputMapper>) => {
+  let cliques = findAllThreeCliques({ edges, nodes });
+  while (cliques.length > 0) {
+    // Take all the three cliques, and repeatedly expand them by one node until there's no larger clique
+    const newCliques = expandCliques({ edges, nodes }, cliques);
+    if (newCliques.length == 0) {
+      return cliques[0].join(",");
     }
-  });
-
-  console.log(results);
+    cliques = newCliques;
+  }
 };
-
-solvePart1();
-solvePart2();

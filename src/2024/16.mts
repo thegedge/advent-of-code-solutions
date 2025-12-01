@@ -8,9 +8,6 @@ import {
   numTurns,
   withinBounds,
 } from "../utils/graphs.mts";
-import { readInputFile } from "../utils/utility.mts";
-
-const groups = await readInputFile(import.meta);
 
 type Node = [row: number, column: number, direction: Direction];
 
@@ -67,63 +64,52 @@ class ReindeerMap implements Graph<string, Node, number> {
   }
 }
 
-const readData = (data: string) => {
+export const inputMapper = (data: string) => {
   return new ReindeerMap(data.split("\n").map((line) => line.split("")));
 };
 
-const solvePart1 = () => {
-  const results = groups.map(readData).map((map, index) => {
-    const source: Node = [...map.findCoord("S")!, EAST];
-    const dest = map.findCoord("E")!;
+export const solvePart1 = (map: ReturnType<typeof inputMapper>) => {
+  const source: Node = [...map.findCoord("S")!, EAST];
+  const dest = map.findCoord("E")!;
 
-    // We can end up on the final destination facing any direction, so we'll try all of them and
-    // take the smallest. Redundant, but worst-case complexity is the same.
-    const results = DIRECTIONS.map((dir) =>
-      dijkstra(map, {
-        source,
-        destination: [...dest, dir],
-        paths: "any",
-      })
-    );
+  // We can end up on the final destination facing any direction, so we'll try all of them and
+  // take the smallest. Redundant, but worst-case complexity is the same.
+  const results = DIRECTIONS.map((dir) =>
+    dijkstra(map, {
+      source,
+      destination: [...dest, dir],
+      paths: "any",
+    })
+  );
 
-    return Math.min(...results.map((result) => result[0]));
-  });
-
-  console.log(results);
+  return Math.min(...results.map((result) => result[0]));
 };
 
-const solvePart2 = () => {
-  const results = groups.map(readData).map((map) => {
-    const source: Node = [...map.findCoord("S")!, EAST];
-    const dest = map.findCoord("E")!;
+export const solvePart2 = (map: ReturnType<typeof inputMapper>) => {
+  const source: Node = [...map.findCoord("S")!, EAST];
+  const dest = map.findCoord("E")!;
 
-    // We can end up on the final destination facing any direction, so we'll try all of them and
-    // take the smallest. Redundant, but worst-case complexity is the same.
-    const results = DIRECTIONS.map((dir) =>
-      dijkstra<unknown, Node, number>(map, {
-        source,
-        destination: [...dest, dir],
-        paths: "all",
-      })
-    );
+  // We can end up on the final destination facing any direction, so we'll try all of them and
+  // take the smallest. Redundant, but worst-case complexity is the same.
+  const results = DIRECTIONS.map((dir) =>
+    dijkstra<unknown, Node, number>(map, {
+      source,
+      destination: [...dest, dir],
+      paths: "all",
+    })
+  );
 
-    const nodes = new Set<number>();
-    const shortest = Math.min(...results.map((result) => result[0]));
-    for (const result of results) {
-      if (result[0] === shortest) {
-        for (const path of result[1]) {
-          for (const node of path) {
-            nodes.add(map.keyFor(node) >> 2);
-          }
+  const nodes = new Set<number>();
+  const shortest = Math.min(...results.map((result) => result[0]));
+  for (const result of results) {
+    if (result[0] === shortest) {
+      for (const path of result[1]) {
+        for (const node of path) {
+          nodes.add(map.keyFor(node) >> 2);
         }
       }
     }
+  }
 
-    return nodes.size;
-  });
-
-  console.log(results);
+  return nodes.size;
 };
-
-solvePart1();
-solvePart2();

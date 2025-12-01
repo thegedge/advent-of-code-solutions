@@ -1,11 +1,8 @@
 import { bfs } from "../utils/bfs.mts";
 import { type Coordinate } from "../utils/graphs.mts";
 import { GridMap } from "../utils/GridMap.mts";
-import { readInputFile } from "../utils/utility.mts";
 
-const groups = await readInputFile(import.meta);
-
-const readData = (data: string) => {
+export const inputMapper = (data: string) => {
   return new ProblemTenMap(data.split("\n").map((line) => line.split("")));
 };
 
@@ -61,41 +58,30 @@ class ProblemTenMap extends GridMap<string> {
   }
 }
 
-const solvePart1 = () => {
-  const results = groups.map(readData).map((map) => {
-    let maxDistance = 0;
-    bfs(map, {
-      startingNodes: map.findCoords("S"),
-      process: (_map, _node, distance) => {
-        maxDistance = Math.max(maxDistance, distance);
-      },
-    });
-    // console.log(dumpMapData(distances));
-    // console.log();
-    return maxDistance;
+export const solvePart1 = (map: ReturnType<typeof inputMapper>) => {
+  let maxDistance = 0;
+  bfs(map, {
+    startingNodes: map.findCoords("S"),
+    process: (_map, _node, distance) => {
+      maxDistance = Math.max(maxDistance, distance);
+    },
   });
-
-  console.log(results);
+  // console.log(dumpMapData(distances));
+  // console.log();
+  return maxDistance;
 };
 
-const solvePart2 = () => {
+export const solvePart2 = (map: ReturnType<typeof inputMapper>) => {
   // TODO not sure how to solve this one immediately, moving on!
 
-  const results = groups.map(readData).map((map) => {
-    const startingNodes = map.findCoords("S")!;
-    const loop = bfs(map, {
-      startingNodes,
-      process: (_map, node, distance) => {
-        //
-      },
-    });
-
-    // console.log(dumpMapData(loop, { stringify: (v) => (v == null ? "x" : v) }));
-    // console.log();
+  const startingNodes = map.findCoords("S")!;
+  const loop = bfs(map, {
+    startingNodes,
+    process: (_map, node, distance) => {
+      //
+    },
   });
 
-  console.log(results);
+  // console.log(dumpMapData(loop, { stringify: (v) => (v == null ? "x" : v) }));
+  // console.log();
 };
-
-solvePart1();
-solvePart2();

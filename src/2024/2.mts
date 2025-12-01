@@ -1,8 +1,6 @@
 import { sumOf } from "../utils/collections.mts";
-import { readInputFile } from "../utils/utility.mts";
 
-const groups = await readInputFile(import.meta);
-const readData = (data: string) => {
+export const inputMapper = (data: string) => {
   return data.split("\n").map((line) => {
     return line.split(" ").map((item) => Number(item));
   });
@@ -28,28 +26,17 @@ const isGood = (numbers: number[]) => {
   });
 };
 
-const solvePart1 = () => {
-  const results = groups.map(readData).map((group) => {
-    return sumOf(group, (numbers) => (isGood(numbers) ? 1n : 0n));
-  });
-
-  console.log(results);
+export const solvePart1 = (data: ReturnType<typeof inputMapper>) => {
+  return sumOf(data, (numbers) => (isGood(numbers) ? 1n : 0n));
 };
 
-const solvePart2 = () => {
-  const results = groups.map(readData).map((group) => {
-    return sumOf(group, (numbers) => {
-      for (let indexToRemove = 0; indexToRemove < numbers.length; indexToRemove++) {
-        if (isGood(numbers.toSpliced(indexToRemove, 1))) {
-          return 1n;
-        }
+export const solvePart2 = (data: ReturnType<typeof inputMapper>) => {
+  return sumOf(data, (numbers) => {
+    for (let indexToRemove = 0; indexToRemove < numbers.length; indexToRemove++) {
+      if (isGood(numbers.toSpliced(indexToRemove, 1))) {
+        return 1n;
       }
-      return 0n;
-    });
+    }
+    return 0n;
   });
-
-  console.log(results);
 };
-
-solvePart1();
-solvePart2();

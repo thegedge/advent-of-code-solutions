@@ -1,7 +1,4 @@
 import { countBy, maxBy, sortBy, sumOf } from "../utils/collections.mts";
-import { readInputFile } from "../utils/utility.mts";
-
-const groups = await readInputFile(import.meta);
 
 // A lot of duplication in this solution, but no need to generalize!
 
@@ -41,7 +38,7 @@ type Tuple5<T> = [T, T, T, T, T];
 type Bid = { hand: Tuple5<keyof typeof CARD_STRENGTHS>; amount: bigint };
 type BidWithReplaced = Bid & { newHand: Bid["hand"] };
 
-const readData = (data: string): Bid[] => {
+export const inputMapper = (data: string): Bid[] => {
   return data.split("\n").map((line) => {
     const [hand, bid] = line.split(" ");
     return {
@@ -148,33 +145,22 @@ const jokerReplacement = (hand: Bid["hand"]): keyof typeof CARD_STRENGTHS2 | nul
   }
 };
 
-const solvePart1 = () => {
-  const results = groups.map(readData).map((bids) => {
-    bids.sort(compareHands);
-    return sumOf(bids, (hand, index) => BigInt(index + 1) * hand.amount);
-  });
-
-  console.log(results);
+export const solvePart1 = (bids: ReturnType<typeof inputMapper>) => {
+  bids.sort(compareHands);
+  return sumOf(bids, (hand, index) => BigInt(index + 1) * hand.amount);
 };
 
-const solvePart2 = () => {
-  const results = groups.map(readData).map((bids) => {
-    const bestHands = bids.map(({ hand, amount }) => {
-      const replacement = jokerReplacement(hand);
-      return {
-        hand,
-        newHand: replacement
-          ? (hand.map((v) => (v == "J" ? replacement : v)) as Tuple5<keyof typeof CARD_STRENGTHS2>)
-          : hand,
-        amount,
-      };
-    });
-    bestHands.sort(compareHands2);
-    return sumOf(bestHands, ({ amount }, index) => BigInt(index + 1) * amount);
+export const solvePart2 = (bids: ReturnType<typeof inputMapper>) => {
+  const bestHands = bids.map(({ hand, amount }) => {
+    const replacement = jokerReplacement(hand);
+    return {
+      hand,
+      newHand: replacement
+        ? (hand.map((v) => (v == "J" ? replacement : v)) as Tuple5<keyof typeof CARD_STRENGTHS2>)
+        : hand,
+      amount,
+    };
   });
-
-  console.log(results);
+  bestHands.sort(compareHands2);
+  return sumOf(bestHands, ({ amount }, index) => BigInt(index + 1) * amount);
 };
-
-solvePart1();
-solvePart2();

@@ -1,12 +1,9 @@
 import { sumOf } from "../utils/collections.mts";
 import { solveSystem } from "../utils/math.mts";
-import { readInputFile } from "../utils/utility.mts";
-
-const groups = await readInputFile(import.meta, "\n---\n");
 
 const LINE_REGEX = /.+?: X[+=](?<x>\d+), Y[+=](?<y>\d+)/;
 
-const readData = (data: string) => {
+export const inputMapper = (data: string) => {
   return data.split("\n\n").map((line) => {
     const [a, b, prize] = line.split("\n").map((line) => {
       const { x, y } = LINE_REGEX.exec(line)!.groups!;
@@ -17,27 +14,16 @@ const readData = (data: string) => {
   });
 };
 
-const solvePart1 = () => {
-  const results = groups.map(readData).map((group) => {
-    return sumOf(group, ({ a, b, prize }) => {
-      const [j, k] = solveSystem(a.x, b.x, prize.x, a.y, b.y, prize.y) || [0n, 0n];
-      return 3n * j + k;
-    });
+export const solvePart1 = (data: ReturnType<typeof inputMapper>) => {
+  return sumOf(data, ({ a, b, prize }) => {
+    const [j, k] = solveSystem(a.x, b.x, prize.x, a.y, b.y, prize.y) || [0n, 0n];
+    return 3n * j + k;
   });
-
-  console.log(results);
 };
 
-const solvePart2 = () => {
-  const results = groups.map(readData).map((group) => {
-    return sumOf(group, ({ a, b, prize }) => {
-      const [j, k] = solveSystem(a.x, b.x, 10000000000000n + prize.x, a.y, b.y, 10000000000000n + prize.y) || [0n, 0n];
-      return 3n * j + k;
-    });
+export const solvePart2 = (data: ReturnType<typeof inputMapper>) => {
+  return sumOf(data, ({ a, b, prize }) => {
+    const [j, k] = solveSystem(a.x, b.x, 10000000000000n + prize.x, a.y, b.y, 10000000000000n + prize.y) || [0n, 0n];
+    return 3n * j + k;
   });
-
-  console.log(results);
 };
-
-solvePart1();
-solvePart2();

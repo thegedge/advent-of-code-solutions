@@ -1,9 +1,6 @@
 import { sumOf } from "../utils/collections.mts";
-import { readInputFile } from "../utils/utility.mts";
 
-const groups = await readInputFile(import.meta);
-
-const readData = (data: string) => {
+export const inputMapper = (data: string) => {
   return data.split("\n").map((line) => line.split(" ").map(BigInt));
 };
 
@@ -17,21 +14,10 @@ const extrapolate = (values: bigint[], backwards: boolean): bigint => {
   return backwards ? values[0] - value : value + values[values.length - 1];
 };
 
-const solvePart1 = () => {
-  const results = groups.map(readData).map((group) => {
-    return sumOf(group, (history) => extrapolate(history, false));
-  });
-
-  console.log(results);
+export const solvePart1 = (data: ReturnType<typeof inputMapper>) => {
+  return sumOf(data, (history) => extrapolate(history, false));
 };
 
-const solvePart2 = () => {
-  const results = groups.map(readData).map((group) => {
-    return sumOf(group, (history) => extrapolate(history, true));
-  });
-
-  console.log(results);
+export const solvePart2 = (data: ReturnType<typeof inputMapper>) => {
+  return sumOf(data, (history) => extrapolate(history, true));
 };
-
-solvePart1();
-solvePart2();

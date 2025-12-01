@@ -1,9 +1,8 @@
 import { countBy, sumOf, zip } from "../utils/collections.mts";
 import { abs } from "../utils/math.mts";
-import { id, readInputFile } from "../utils/utility.mts";
+import { id } from "../utils/utility.mts";
 
-const groups = await readInputFile(import.meta);
-const readData = (data: string) => {
+export const inputMapper = (data: string) => {
   return data.split("\n").reduce(
     ([left, right], line) => {
       const [a, b] = line.split(/\s+/).map((v) => BigInt(v));
@@ -15,24 +14,15 @@ const readData = (data: string) => {
   );
 };
 
-const solvePart1 = () => {
-  const results = groups.map(readData).map(([left, right]) => {
-    left.sort();
-    right.sort();
-    return zip(left, right).reduce((acc, [a, b]) => acc + abs(a - b), 0n);
-  });
-
-  console.log(results);
+export const solvePart1 = (data: ReturnType<typeof inputMapper>) => {
+  const [left, right] = data;
+  left.sort();
+  right.sort();
+  return zip(left, right).reduce((acc, [a, b]) => acc + abs(a - b), 0n);
 };
 
-const solvePart2 = () => {
-  const results = groups.map(readData).map(([left, right]) => {
-    const counts = countBy(right, id);
-    return sumOf(left, (item) => item * BigInt(counts.get(item) || 0));
-  });
-
-  console.log(results);
+export const solvePart2 = (data: ReturnType<typeof inputMapper>) => {
+  const [left, right] = data;
+  const counts = countBy(right, id);
+  return sumOf(left, (item) => item * BigInt(counts.get(item) || 0));
 };
-
-solvePart1();
-solvePart2();
