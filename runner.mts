@@ -4,8 +4,8 @@ import { mkdir, statfs, writeFile } from "node:fs/promises";
 import { parseArgs } from "node:util";
 import { cachedRead, memoize } from "./src/utils/utility.mts";
 
-type Puzzle = {
-  name: string;
+export type Puzzle = {
+  name: `Example ${number}` | "Main input";
   input: string;
   part1Result?: string;
   part2Result?: string;
@@ -25,7 +25,7 @@ const fetch = async (url: string) => {
 
 const puzzlePage = memoize(async (year: number, problem: number) => {
   const result = await cachedRead(
-    `${year}/${problem}.html`,
+    `${year}/${problem}/problem.html`,
     async () => await fetch(`https://adventofcode.com/${year}/day/${problem}`)
   );
   return parse(result, { blockTextElements: { code: true } });
@@ -33,7 +33,7 @@ const puzzlePage = memoize(async (year: number, problem: number) => {
 
 const inputData = async (year: number, problem: number): Promise<Puzzle> => {
   const input = await cachedRead(
-    `${year}/${problem}.in`,
+    `${year}/${problem}/problem.in`,
     async () => await fetch(`https://adventofcode.com/${year}/day/${problem}/input`)
   );
 
@@ -59,9 +59,9 @@ const importProblem = async (year: number, problem: number) => {
       const mod = await import(`./src/${year}/${problem}.${extension}`);
       if (mod.solvePart1 && mod.solvePart2) {
         return {
-          solvePart1: mod.solvePart1 as (input: unknown) => string,
-          solvePart2: mod.solvePart2 as (input: unknown) => string,
-          inputMapper: mod.inputMapper as (input: string) => unknown,
+          solvePart1: mod.solvePart1 as (input: unknown, name: string) => string,
+          solvePart2: mod.solvePart2 as (input: unknown, name: string) => string,
+          inputMapper: mod.inputMapper as (input: string, name: string) => unknown,
         };
       }
     } catch (_error) {
@@ -78,10 +78,29 @@ const fetchExamples = async (year: number, problem: number): Promise<Puzzle[]> =
   const examples: Puzzle[] = [];
   const seenExamples = new Set<string>();
   for (const code of dom.querySelectorAll("pre code")) {
-    const exampleText = code.text.replace(/^\n|\n$/, "");
+    // TODO node-html-parser seems pretty broken for most query selectors
+    if (code.text.includes("<em>")) {
+      // Example inputs rarely have any emphasis tags
+      continue;
+    }
+
+    const articleForPart = code.closest("article");
+    if (!articleForPart) {
+      continue;
+    }
+
+    if (articleForPart.querySelector("pre code") != code) {
+      // Typically the first code block in the article is the example input, so ignore all others
+      // (sometimes there are multiple examples, but for now we ignore them)
+      continue;
+    }
+
+    const exampleText = code.text.replaceAll(/^\n|\n$|<\/?\w+>/g, "");
     if (seenExamples.has(exampleText)) {
       continue;
     }
+
+    console.log(exampleText);
 
     examples.push({
       name: `Example ${examples.length + 1}`,
@@ -157,17 +176,16 @@ const main = async (argv: string[]) => {
 
   const puzzles = await fetchExamples(year, problem);
   puzzles.push(await inputData(year, problem));
-
   for (const puzzle of puzzles) {
     console.log(`-- ${puzzle.name} -------------------------\n`);
 
-    const mappedInput = mod.inputMapper?.(puzzle.input) ?? puzzle.input;
+    const mappedInput = mod.inputMapper?.(puzzle.input, puzzle.name) ?? puzzle.input;
 
-    const part1Result = mod.solvePart1(mappedInput);
+    const part1Result = mod.solvePart1(mappedInput, puzzle.name);
     const part1Emoji = emojiForResult(part1Result, puzzle.part1Result);
     console.log(part1Emoji, "Part 1 result:", part1Result);
 
-    const part2Result = mod.solvePart2(mappedInput);
+    const part2Result = mod.solvePart2(mappedInput, puzzle.name);
     const part2Emoji = emojiForResult(part2Result, puzzle.part2Result);
     console.log(part2Emoji, "Part 2 result:", part2Result);
     console.log("\n");
