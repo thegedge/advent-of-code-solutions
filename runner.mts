@@ -1,6 +1,6 @@
 #!/usr/bin/env node --use-strict --harmony --max-old-space-size=16000 --single-threaded
 import { parse } from "node-html-parser";
-import { mkdir, statfs, writeFile } from "node:fs/promises";
+import { mkdir, rm, statfs, writeFile } from "node:fs/promises";
 import { parseArgs } from "node:util";
 import { Ollama } from "ollama";
 import { cachedRead, cachedReadJson, memoize } from "./src/utils/utility.mts";
@@ -30,7 +30,7 @@ const SYSTEM_PROMPT = `
             name: string,
             input: string,
             outputPart1: string,
-            outputPart2: string,
+            outputPart2: string | null,
           },
         ],
       }
@@ -54,7 +54,9 @@ const SYSTEM_PROMPT = `
   were shown in the first part. You'll often see phrases like "the example above" or "in the above example", but
   there could be other similar phrases that reference the example from the part one.
 
-  If you can't find the output for a part, you should return an empty string for the output of that example.
+  If you can't find the output for part one, you should return an empty string for the output of that example.
+  If you can't find the output for part two, you should return null if the user hasn't unlocked part two yet,
+  but otherwise return an empty string for the output of that example.
 `
   .trim()
   .replaceAll(/^  /gm, "");
@@ -124,7 +126,7 @@ const fetchExamples = async (year: number, problem: number): Promise<Puzzle[]> =
 
     let upsertModel = false;
     try {
-      const result = await ollama.show({ model: "aoc-helpsdasdaser" });
+      const result = await ollama.show({ model: "aoc-helper" });
       if (result.system !== SYSTEM_PROMPT) {
         upsertModel = true;
       }
@@ -232,9 +234,17 @@ export const solvePart2 = (input: ReturnType<typeof inputMapper>) => {
 };
 
 const main = async (argv: string[]) => {
-  const { positionals } = parseArgs({
+  const { positionals, values } = parseArgs({
     args: argv,
     allowPositionals: true, // [year, problem #]
+    options: {
+      reload: {
+        type: "boolean",
+        short: "r",
+        default: false,
+        description: "Reload the problem description",
+      },
+    },
   });
 
   const [year, problem] = positionals.map(Number);
@@ -243,6 +253,15 @@ const main = async (argv: string[]) => {
     process.exit(1);
   }
 
+  // TODO this should be a last resort. We can automate this by setting up the runner script to submit the result
+  //    (since we have the cookie) and then can just re-run the script to get the examples and input data.
+  if (values.reload) {
+    await rm(`.cache/${year}/${problem}`, { recursive: true, force: true });
+  }
+
+  const puzzles = await fetchExamples(year, problem);
+  puzzles.push(await inputData(year, problem));
+
   const mod = await importProblem(year, problem);
   if (!mod) {
     console.error("Could not find module with defined solvePart1 and solvePart2 exports. Attempting to create one...");
@@ -250,8 +269,6 @@ const main = async (argv: string[]) => {
     process.exit(1);
   }
 
-  const puzzles = await fetchExamples(year, problem);
-  puzzles.push(await inputData(year, problem));
   for (const puzzle of puzzles) {
     console.log(`-- ${puzzle.name} -------------------------\n`);
 
