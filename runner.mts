@@ -2,14 +2,62 @@
 import { parse } from "node-html-parser";
 import { mkdir, statfs, writeFile } from "node:fs/promises";
 import { parseArgs } from "node:util";
-import { cachedRead, memoize } from "./src/utils/utility.mts";
+import { Ollama } from "ollama";
+import { cachedRead, cachedReadJson, memoize } from "./src/utils/utility.mts";
 
 export type Puzzle = {
   name: `Example ${number}` | "Main input";
   input: string;
-  part1Result?: string;
-  part2Result?: string;
+  outputPart1?: string;
+  outputPart2?: string;
 };
+
+const SYSTEM_PROMPT = `
+  You are a helpful assistant that can read and parse Advent of Code puzzles.
+
+  The user will provide the puzzle page HTML for you, in a markdown fenced code block - that is, three backticks
+  - with the language set to "html". You should extract the examples from this HTML.
+
+  All puzzles have two parts, although if the user has yet to solve part one you may only see a single part in the
+  HTML. Parts are split across \`<article class="day-desc">\` tags, which are followed by a header tag. The first
+  part will have a header containing the day and title, and the second part is often just labelled "part two".
+
+  You always respond with a JSON object containing the examples. The JSON object should have the following shape:
+
+      {
+        examples: [
+          {
+            name: string,
+            input: string,
+            outputPart1: string,
+            outputPart2: string,
+          },
+        ],
+      }
+
+  The name should be "Example <number>" where <number> is the index of the example in the puzzle. For example,
+  the first example in the HTML should be named "Example 1".
+
+  The example inputs are typically in a \`<pre><code>\` block, and are unlikely to contain \`<em>\` tags. They are
+  usually preceded by a phrase like "For example" or "here's another example", but this is not always the case.
+
+  The examples outputs are often embedded in the paragraph, in a <code> block. If it's just a single number or
+  string, it often will be wrapped in an <em> tag (for example, \`<code><em>123</em></code>\`), but this is not
+  always the case. There's no general phrase preceding this, so you'll need to understand the context of the example
+  to find the output. Some phrases that have been seen are:
+
+    - In this example, \`<code><em>123</em></code>\`...
+    - ...a total of \`<code><em>123</em></code>\`...
+    - Adding up the result of each produces \`<code><em>123</em></code>\`.
+
+  In the second part of the puzzle, there often isn't an example input, but references are made to examples that
+  were shown in the first part. You'll often see phrases like "the example above" or "in the above example", but
+  there could be other similar phrases that reference the example from the part one.
+
+  If you can't find the output for a part, you should return an empty string for the output of that example.
+`
+  .trim()
+  .replaceAll(/^  /gm, "");
 
 const fetch = async (url: string) => {
   if (!process.env.COOKIE) {
@@ -32,25 +80,23 @@ const puzzlePage = memoize(async (year: number, problem: number) => {
 });
 
 const inputData = async (year: number, problem: number): Promise<Puzzle> => {
-  const input = await cachedRead(
-    `${year}/${problem}/problem.in`,
-    async () => await fetch(`https://adventofcode.com/${year}/day/${problem}/input`)
-  );
+  return await cachedReadJson<Puzzle>(`${year}/${problem}/main.json`, async () => {
+    const dom = await puzzlePage(year, problem);
 
-  let results: string[] = [];
-  const dom = await puzzlePage(year, problem);
-  for (const code of dom.querySelectorAll("p code")) {
-    if (code.parentNode?.textContent?.includes("Your puzzle answer was")) {
-      results.push(code.text.trim());
+    const results: string[] = [];
+    for (const code of dom.querySelectorAll("p code")) {
+      if (code.parentNode?.textContent?.includes("Your puzzle answer was")) {
+        results.push(code.text.trim());
+      }
     }
-  }
 
-  return {
-    name: "Main input",
-    input,
-    part1Result: results[0],
-    part2Result: results[1],
-  };
+    return {
+      name: "Main input",
+      input: await fetch(`https://adventofcode.com/${year}/day/${problem}/input`),
+      outputPart1: results[0],
+      outputPart2: results[1],
+    };
+  });
 };
 
 const importProblem = async (year: number, problem: number) => {
@@ -73,50 +119,80 @@ const importProblem = async (year: number, problem: number) => {
 };
 
 const fetchExamples = async (year: number, problem: number): Promise<Puzzle[]> => {
-  const dom = await puzzlePage(year, problem);
+  return await cachedReadJson<Puzzle[]>(`${year}/${problem}/examples.json`, async () => {
+    const ollama = new Ollama();
 
-  const examples: Puzzle[] = [];
-  const seenExamples = new Set<string>();
-  for (const code of dom.querySelectorAll("pre code")) {
-    // TODO node-html-parser seems pretty broken for most query selectors
-    if (code.text.includes("<em>")) {
-      // Example inputs rarely have any emphasis tags
-      continue;
+    let upsertModel = false;
+    try {
+      const result = await ollama.show({ model: "aoc-helpsdasdaser" });
+      if (result.system !== SYSTEM_PROMPT) {
+        upsertModel = true;
+      }
+    } catch (error) {
+      // Assume a not found
+      upsertModel = true;
     }
 
-    const articleForPart = code.closest("article");
-    if (!articleForPart) {
-      continue;
+    if (upsertModel) {
+      const value = await ollama.create({
+        from: "qwen3:4b",
+        model: "aoc-helper",
+        system: SYSTEM_PROMPT,
+      });
+
+      if (value.status !== "success") {
+        return [];
+      }
     }
 
-    if (articleForPart.querySelector("pre code") != code) {
-      // Typically the first code block in the article is the example input, so ignore all others
-      // (sometimes there are multiple examples, but for now we ignore them)
-      continue;
-    }
+    // TODO tool call to validate examples against a solution
 
-    const exampleText = code.text.replaceAll(/^\n|\n$|<\/?\w+>/g, "");
-    if (seenExamples.has(exampleText)) {
-      continue;
-    }
+    const dom = await puzzlePage(year, problem);
+    const response = await ollama.chat({
+      model: "aoc-helper",
+      messages: [
+        {
+          role: "user",
+          content: `
+            Here is the puzzle page HTML for the year ${year} and problem ${problem}:
 
-    console.log(exampleText);
-
-    examples.push({
-      name: `Example ${examples.length + 1}`,
-      input: exampleText,
-      // TODO this is pretty fuzzy, see if we can build a heuristic for finding this. For example, the answer will
-      //   probably always be in a <code> block, but is there some surrounding text we can typically expect?
-      //   Perhaps we could just "human in the loop" this?
-      part1Result: undefined,
-      part2Result: undefined,
+            \`\`\`html
+            ${dom.toString()}
+            \`\`\`
+          `
+            .trim()
+            .replaceAll(/^            /gm, ""),
+        },
+      ],
+      stream: true,
     });
 
-    // Examples are often repeated across part one and two, so we deduplicate them
-    seenExamples.add(exampleText);
-  }
+    const frames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
+    let value = 0;
+    process.stdout.write("\x1b[?25lFetching examples from the AI assistant  ");
+    const interval = setInterval(() => {
+      value = (value + 1) % frames.length;
+      process.stdout.write(`\b${frames[value]}`);
+    }, 100);
 
-  return examples;
+    let content = "";
+    try {
+      for await (const chunk of response) {
+        if (chunk.message.content) {
+          content += chunk.message.content;
+        }
+      }
+    } finally {
+      process.stdout.write("\x1b[?25h");
+      clearInterval(interval);
+    }
+
+    if (!content) {
+      return [];
+    }
+
+    return JSON.parse(content).examples as Puzzle[];
+  });
 };
 
 const createProblemModule = async (year: number, problem: number) => {
@@ -182,11 +258,11 @@ const main = async (argv: string[]) => {
     const mappedInput = mod.inputMapper?.(puzzle.input, puzzle.name) ?? puzzle.input;
 
     const part1Result = mod.solvePart1(mappedInput, puzzle.name);
-    const part1Emoji = emojiForResult(part1Result, puzzle.part1Result);
+    const part1Emoji = emojiForResult(part1Result, puzzle.outputPart1);
     console.log(part1Emoji, "Part 1 result:", part1Result);
 
     const part2Result = mod.solvePart2(mappedInput, puzzle.name);
-    const part2Emoji = emojiForResult(part2Result, puzzle.part2Result);
+    const part2Emoji = emojiForResult(part2Result, puzzle.outputPart2);
     console.log(part2Emoji, "Part 2 result:", part2Result);
     console.log("\n");
   }
@@ -200,13 +276,13 @@ const emojiForResult = (result: unknown, expected: string | undefined) => {
   let comparableExpected: unknown;
   switch (typeof result) {
     case "number":
-      comparableExpected = Number(result);
+      comparableExpected = Number(expected);
       break;
     case "bigint":
       comparableExpected = BigInt(expected);
       break;
     default:
-      comparableExpected = result;
+      comparableExpected = expected;
   }
 
   return result === comparableExpected ? "✅" : "❌";

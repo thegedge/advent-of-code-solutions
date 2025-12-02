@@ -49,3 +49,16 @@ export const cachedRead = memoize(async (filepath: string, f: () => string | Pro
     return data;
   }
 });
+
+/**
+ * Reads JSON from a file.
+ *
+ * If the file doesn't exist, the given function is called and the result is cached at that location.
+ */
+export const cachedReadJson = memoize(async <T,>(filepath: string, f: () => T | Promise<T>): Promise<T> => {
+  const value = await cachedRead(filepath, async () => {
+    const data = await f();
+    return JSON.stringify(data, null, 2);
+  });
+  return JSON.parse(value);
+});
