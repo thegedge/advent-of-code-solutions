@@ -1,7 +1,7 @@
 #!/usr/bin/env node --use-strict --harmony --max-old-space-size=16000 --single-threaded
 import { parse } from "node-html-parser";
 import { mkdir, rm, statfs, writeFile } from "node:fs/promises";
-import { parseArgs } from "node:util";
+import { parseArgs, styleText } from "node:util";
 import { Ollama } from "ollama";
 import { cachedRead, cachedReadJson, memoize } from "./src/utils/utility.mts";
 
@@ -268,10 +268,7 @@ const main = async (argv: string[]) => {
   const puzzles = await fetchExamples(year, problem);
   puzzles.push(await inputData(year, problem));
 
-  const mod = await importProblem(year, problem);
   if (!mod) {
-    console.error("Could not find module with defined solvePart1 and solvePart2 exports. Attempting to create one...");
-    await createProblemModule(year, problem);
     process.exit(1);
   }
 
@@ -282,11 +279,11 @@ const main = async (argv: string[]) => {
 
     const part1Result = mod.solvePart1(mappedInput, puzzle.name);
     const part1Emoji = emojiForResult(part1Result, puzzle.outputPart1);
-    console.log(part1Emoji, "Part 1 result:", part1Result);
+    console.log(`${part1Emoji} ${styleText("dim", "Part 1 result:")} ${part1Result}`);
 
     const part2Result = mod.solvePart2(mappedInput, puzzle.name);
     const part2Emoji = emojiForResult(part2Result, puzzle.outputPart2);
-    console.log(part2Emoji, "Part 2 result:", part2Result);
+    console.log(`${part2Emoji} ${styleText("dim", "Part 2 result:")} ${part2Result}`);
     console.log("\n");
   }
 };
