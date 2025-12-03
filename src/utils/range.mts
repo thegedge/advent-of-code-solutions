@@ -60,6 +60,10 @@ export class Range {
     return `(${this.lo}, ${this.hi})`;
   }
 
+  [Symbol.iterator](): Iterator<number> {
+    return Array.from({ length: this.length }, (_, i) => i + this.lo).values();
+  }
+
   [Symbol.for("Deno.customInspect")](): string {
     return this.toString();
   }
