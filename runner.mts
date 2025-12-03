@@ -259,6 +259,12 @@ const main = async (argv: string[]) => {
     await rm(`.cache/${year}/${problem}`, { recursive: true, force: true });
   }
 
+  const mod = await importProblem(year, problem);
+  if (!mod) {
+    console.error("Could not find module with defined solvePart1 and solvePart2 exports. Creating one...");
+    await createProblemModule(year, problem);
+  }
+
   const puzzles = await fetchExamples(year, problem);
   puzzles.push(await inputData(year, problem));
 
