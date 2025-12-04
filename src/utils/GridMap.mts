@@ -1,17 +1,27 @@
-import { cardinalDirections, type Coordinate, dumpMapData, type Graph, withinBounds } from "./graphs.mts";
+import {
+  cardinalDirections,
+  type Coordinate,
+  dumpMapData,
+  type Graph,
+  type NeighbourFunction,
+  withinBounds,
+} from "./graphs.mts";
 
 /**
  * A map backed by a two-dimensional array.
  *
  * By default,
  */
-
 export class GridMap<T> implements Graph<T, Coordinate, number> {
   /** The map data */
   readonly data: T[][];
 
-  constructor(data: T[][]) {
+  /** The function to use to get the neighbours of a given coordinate */
+  readonly neighbourFunction: NeighbourFunction<Coordinate>;
+
+  constructor(data: T[][], neighbourFunction: NeighbourFunction<Coordinate> = cardinalDirections) {
     this.data = data;
+    this.neighbourFunction = neighbourFunction;
   }
 
   // IMap implementation
@@ -41,7 +51,7 @@ export class GridMap<T> implements Graph<T, Coordinate, number> {
   }
 
   neighbours(coord: Coordinate): Coordinate[] {
-    return cardinalDirections(coord).filter((c) => this.validCoord(c));
+    return this.neighbourFunction(coord).filter((c) => this.validCoord(c));
   }
 
   // GridMap-specific methods
@@ -73,6 +83,10 @@ export class GridMap<T> implements Graph<T, Coordinate, number> {
     }
   }
 
+  [Symbol.iterator]() {
+    return this.nodesAndValues();
+  }
+
   *nodes() {
     const height = this.data.length;
     const width = this.data[0].length;
@@ -81,6 +95,10 @@ export class GridMap<T> implements Graph<T, Coordinate, number> {
         yield [row, col] as Coordinate;
       }
     }
+  }
+
+  nodesAndValues() {
+    return this.nodes().map((node) => [node, this.valueAt(node)] as const);
   }
 
   /**
