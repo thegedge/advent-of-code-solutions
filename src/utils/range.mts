@@ -1,29 +1,60 @@
 import { max, min } from "./math.mts";
 
-export class Range {
-  public readonly length: number;
-  public readonly lo: number;
-  public readonly hi: number;
+// TODO remove all of the `as any` once something like
+//      https://github.com/Microsoft/TypeScript/issues/27808 is supported
 
-  static span(lo: number, length: number): Range {
-    return new Range(lo, lo + length - 1);
+export class Range<T extends number | bigint = number> {
+  public readonly lo: T;
+  public readonly hi: T;
+  public readonly length: number;
+
+  private readonly ONE: T;
+
+  static span<T extends number | bigint>(lo: T, length: T): Range<T> {
+    return new Range(lo, lo + ((length - 1) as any));
   }
 
-  constructor(lo: number, hi: number) {
+  /**
+   * Creates a new range from a lower and upper bound.
+   *
+   * @param lo - The lower bound of the range (inclusive).
+   * @param hi - The upper bound of the range (inclusive).
+   */
+  constructor(lo: T, hi: T) {
     if (lo > hi) {
       throw new Error(`Invalid range: ${lo} > ${hi}`);
     }
 
+    this.ONE = (typeof lo === "number" ? 1 : 1n) as any;
+
     this.lo = lo;
     this.hi = hi;
-    this.length = this.hi - this.lo + 1;
+    this.length = this.hi - this.lo + (this.ONE as any);
   }
 
-  overlaps(range: Range): boolean {
+  includes(value: T): boolean {
+    return value >= this.lo && value <= this.hi;
+  }
+
+  overlaps(range: Range<T>): boolean {
     return this.lo <= range.hi && this.hi >= range.lo;
   }
 
-  intersect(range: Range): Range | null {
+  /**
+   * If overlapping, returns the smallest range that contains both this and the given range.
+   */
+  union(range: Range<T>): Range<T> | null {
+    if (!this.overlaps(range)) {
+      return null;
+    }
+
+    return new Range(min(this.lo, range.lo), max(this.hi, range.hi));
+  }
+
+  /**
+   * If overlapping, returns the largest range that is contained in both this and the given range.
+   */
+  intersect(range: Range<T>): Range<T> | null {
     if (!this.overlaps(range)) {
       return null;
     }
@@ -34,34 +65,54 @@ export class Range {
   /**
    * Like {@linkcode intersect}, but also returns the parts of the given range that are not overlapping this range.
    */
-  partition(range: Range): [overlapping: Range | null, nonOverlapping: Range[]] {
+  partition(range: Range<T>): [overlapping: Range<T> | null, nonOverlapping: Range<T>[]] {
     const overlapping = this.intersect(range);
     if (!overlapping) {
       return [null, [range]];
     }
 
     if (range.lo < this.lo && range.hi <= this.hi) {
-      return [overlapping, [new Range(range.lo, this.lo - 1)]];
+      return [overlapping, [new Range(range.lo, (this.lo - 1) as T)]];
     } else if (range.lo >= this.lo && range.hi > this.hi) {
-      return [overlapping, [new Range(this.hi + 1, range.hi)]];
+      // @ts-expect-error -- `hi` and `ONE` are the same type
+      return [overlapping, [new Range(this.hi + this.ONE, range.hi)]];
     } else if (range.lo >= this.lo && range.hi <= this.hi) {
       return [overlapping, []];
     } else {
       // This range is completely contained in the given range
-      return [overlapping, [new Range(range.lo, this.lo - 1), new Range(this.hi + 1, range.hi)]];
+      return [overlapping, [new Range(range.lo, (this.lo - 1) as T), new Range(this.hi + (this.ONE as any), range.hi)]];
     }
   }
 
-  includes(value: number): boolean {
-    return value >= this.lo && value <= this.hi;
-  }
-
   toString(): string {
-    return `(${this.lo}, ${this.hi})`;
+    return `${this.lo} — ${this.hi}`;
   }
 
-  [Symbol.iterator](): Iterator<number> {
-    return Array.from({ length: this.length }, (_, i) => i + this.lo).values();
+  [Symbol.iterator](): Iterator<T> {
+    const object = {
+      current: this.lo,
+      end: this.hi,
+
+      next(): IteratorResult<T> {
+        if (this.current > this.end) {
+          return { done: true, value: undefined };
+        }
+        return { done: false, value: this.current++ } as any;
+      },
+    };
+    return object;
+  }
+
+  [Symbol.toPrimitive](hint?: "number" | "string" | "default"): number | string {
+    if (hint === "number") {
+      return Number(this.lo);
+    }
+
+    return this.toString();
+  }
+
+  [Symbol.for("nodejs.util.inspect.custom")](): string {
+    return this.toString();
   }
 
   [Symbol.for("Deno.customInspect")](): string {
