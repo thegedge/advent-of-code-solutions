@@ -277,15 +277,38 @@ const main = async (argv: string[]) => {
 
     const mappedInput = mod.inputMapper?.(puzzle.input, puzzle.name) ?? puzzle.input;
 
-    const part1Result = mod.solvePart1(mappedInput, puzzle.name);
+    const [part1Result, part1Duration] = measure(() => mod.solvePart1(mappedInput, puzzle.name));
     const part1Emoji = emojiForResult(part1Result, puzzle.outputPart1);
-    console.log(`${part1Emoji} ${styleText("dim", "Part 1 result:")} ${part1Result}`);
+    console.log(
+      `${part1Emoji} ${styleText("dim", "Part 1 result:")} ${part1Result} ${styleText(["italic", "cyan"], `(${part1Duration})`)}`
+    );
 
-    const part2Result = mod.solvePart2(mappedInput, puzzle.name);
+    const [part2Result, part2Duration] = measure(() => mod.solvePart2(mappedInput, puzzle.name));
     const part2Emoji = emojiForResult(part2Result, puzzle.outputPart2);
-    console.log(`${part2Emoji} ${styleText("dim", "Part 2 result:")} ${part2Result}`);
+    console.log(
+      `${part2Emoji} ${styleText("dim", "Part 2 result:")} ${part2Result} ${styleText(["italic", "cyan"], `(${part2Duration})`)}`
+    );
     console.log("\n");
   }
+};
+
+const measure = <T,>(fn: () => T): [result: T, duration: string] => {
+  const start = performance.now();
+  const result = fn();
+  const duration = performance.now() - start;
+
+  let measurement: string;
+  if (duration < 1) {
+    measurement = `${(duration * 1000).toFixed(0)}ns`;
+  } else if (duration >= 1000) {
+    measurement = `${duration.toFixed(2)}s`;
+  } else if (duration >= 10_000) {
+    measurement = `${duration.toFixed(0)}s`;
+  } else {
+    measurement = `${duration.toFixed(0)}ms`;
+  }
+
+  return [result, measurement];
 };
 
 const emojiForResult = (result: unknown, expected: string | undefined) => {
