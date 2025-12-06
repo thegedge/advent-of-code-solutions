@@ -39,7 +39,8 @@ const SYSTEM_PROMPT = `
   the first example in the HTML should be named "Example 1".
 
   The example inputs are typically in a \`<pre><code>\` block, and are unlikely to contain \`<em>\` tags. They are
-  usually preceded by a phrase like "For example" or "here's another example", but this is not always the case.
+  usually preceded by a phrase like "For example" or "here's another example", but this is not always the case. Keep
+  the example input as it is, without any modifications. In particular, consider all whitespace important.
 
   The examples outputs are often embedded in the paragraph, in a <code> block. If it's just a single number or
   string, it often will be wrapped in an <em> tag (for example, \`<code><em>123</em></code>\`), but this is not
