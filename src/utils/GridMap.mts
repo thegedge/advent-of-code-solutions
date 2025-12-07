@@ -26,7 +26,7 @@ export class GridMap<T> implements Graph<T, Coordinate, number> {
 
   // IMap implementation
   valueAt(coord: Coordinate): T {
-    return this.data[coord[0]][coord[1]];
+    return this.data[coord[0]]?.[coord[1]];
   }
 
   setValueAt(coord: Coordinate, value: T): void {
