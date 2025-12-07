@@ -1,3 +1,4 @@
+import { sumOf } from "../utils/collections.mts";
 import type { Coordinate } from "../utils/graphs.mts";
 import { GridMap } from "../utils/GridMap.mts";
 
@@ -46,6 +47,39 @@ export const solvePart1 = (input: ReturnType<typeof inputMapper>) => {
   return numSplits;
 };
 
+// We use a dynamic programming approach to avoid recalculating the same values multiple times.
 export const solvePart2 = (input: ReturnType<typeof inputMapper>) => {
-  // Solve me
+  const visits = new Map<number, number>();
+
+  const recurse = (coord: Coordinate) => {
+    if (!input.validCoord(coord)) {
+      return 1;
+    }
+
+    const coordKey = input.keyFor(coord);
+    if (visits.has(coordKey)) {
+      // We've already visited this split, so just return that value
+      // This is what makes it compute fast!
+      return visits.get(coordKey)!;
+    }
+
+    let value: number;
+    if (input.valueAt(coord) === "v") {
+      value = sumOf(
+        [
+          [coord[0], coord[1] + 1],
+          [coord[0], coord[1] - 1],
+        ] as const,
+        (coord) => (input.validCoord(coord) ? recurse(coord) : 0)
+      );
+    } else {
+      value = recurse([coord[0] + 1, coord[1]]);
+    }
+
+    visits.set(coordKey, value);
+    return value;
+  };
+
+  const head = input.findCoords("S")[0];
+  return recurse(head);
 };
