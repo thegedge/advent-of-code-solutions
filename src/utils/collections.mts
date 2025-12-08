@@ -130,6 +130,14 @@ export const combinations = function* <T>(array: T[], n: number, from = 0): Gene
   }
 };
 
+export const pairs = function* <T>(array: T[]): Generator<[T, T]> {
+  for (let i = 0; i < array.length; ++i) {
+    for (let j = i + 1; j < array.length; ++j) {
+      yield [array[i], array[j]];
+    }
+  }
+};
+
 const HOLE = Symbol("HOLE");
 
 /**
