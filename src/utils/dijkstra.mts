@@ -1,4 +1,4 @@
-import { BinaryHeap } from "./BinaryHeap.mts";
+import { PriorityQueue } from "./PriorityQueue.mts";
 import type { Graph, Primitive } from "./graphs.mts";
 
 export function dijkstra<ValueT, NodeT, KeyT extends Primitive>(
@@ -51,7 +51,7 @@ export function dijkstra<ValueT, NodeT, KeyT extends Primitive>(
     paths?: "any" | "all";
   }
 ): number | [number, NodeT[] | NodeT[][]] {
-  const queue = new BinaryHeap((a: [NodeT, number], b: [NodeT, number]) => {
+  const queue = new PriorityQueue((a: [NodeT, number], b: [NodeT, number]) => {
     return a[1] < b[1] ? -1 : a[1] > b[1] ? 1 : 0;
   });
   const distances = new Map<KeyT, number>();
