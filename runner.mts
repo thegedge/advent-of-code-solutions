@@ -115,8 +115,12 @@ const importProblem = async (year: number, problem: number) => {
           inputMapper: mod.inputMapper as (input: string, name: string) => unknown,
         };
       }
-    } catch (_error) {
-      // Ignore
+    } catch (error) {
+      if (error instanceof SyntaxError) {
+        throw error;
+      }
+
+      // Assume a "not found" error
     }
   }
 
