@@ -5,11 +5,13 @@ import { parseArgs, styleText } from "node:util";
 import { Ollama } from "ollama";
 import { cachedRead, cachedReadJson, memoize } from "./src/utils/utility.mts";
 
+type JSONScalar = string | number | bigint | boolean | null;
+
 export type Puzzle = {
   name: `Example ${number}` | "Main input";
   input: string;
-  outputPart1?: string;
-  outputPart2?: string;
+  outputPart1?: JSONScalar;
+  outputPart2?: JSONScalar;
 };
 
 const SYSTEM_PROMPT = `
@@ -281,13 +283,19 @@ const main = async (argv: string[]) => {
     const [part1Result, part1Duration] = measure(() => mod.solvePart1(mappedInput, puzzle.name));
     const part1Emoji = emojiForResult(part1Result, puzzle.outputPart1);
     console.log(
-      `${part1Emoji} ${styleText("dim", "Part 1 result:")} ${part1Result} ${styleText(["italic", "cyan"], `(${part1Duration})`)}`
+      part1Emoji,
+      styleText("dim", "Part 1 result:"),
+      String(part1Result),
+      styleText(["italic", "cyan"], `(${part1Duration})`)
     );
 
     const [part2Result, part2Duration] = measure(() => mod.solvePart2(mappedInput, puzzle.name));
     const part2Emoji = emojiForResult(part2Result, puzzle.outputPart2);
     console.log(
-      `${part2Emoji} ${styleText("dim", "Part 2 result:")} ${part2Result} ${styleText(["italic", "cyan"], `(${part2Duration})`)}`
+      part2Emoji,
+      styleText("dim", "Part 2 result:"),
+      String(part2Result),
+      styleText(["italic", "cyan"], `(${part2Duration})`)
     );
     console.log("\n");
   }
@@ -312,8 +320,8 @@ const measure = <T,>(fn: () => T): [result: T, duration: string] => {
   return [result, measurement];
 };
 
-const emojiForResult = (result: unknown, expected: string | undefined) => {
-  if (expected === undefined) {
+const emojiForResult = (result: unknown, expected: JSONScalar | undefined): "✅" | "❌" | "❓" => {
+  if (expected == null) {
     return "❓";
   }
 
