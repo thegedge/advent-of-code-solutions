@@ -81,7 +81,15 @@ const puzzlePage = memoize(async (year: number, problem: number) => {
     `${year}/${problem}/problem.html`,
     async () => await fetch(`https://adventofcode.com/${year}/day/${problem}`)
   );
-  return parse(result, { blockTextElements: { code: true } });
+
+  // Parse into a DOM and remove some stuff that isn't going to impact what we care about.
+  // This should reduce the size of the context.
+  const dom = parse(result, { blockTextElements: { code: true } });
+  dom.querySelector("head")?.remove();
+  dom.querySelector("header")?.remove();
+  dom.querySelector("#sidebar")?.remove();
+  dom.querySelectorAll("script").forEach((script) => script.remove());
+  return dom;
 });
 
 const inputData = async (year: number, problem: number): Promise<Puzzle> => {
@@ -157,6 +165,7 @@ const fetchExamples = async (year: number, problem: number): Promise<Puzzle[]> =
     // TODO tool call to validate examples against a solution
 
     const dom = await puzzlePage(year, problem);
+
     const response = await ollama.chat({
       model: "aoc-helper",
       messages: [
