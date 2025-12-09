@@ -2,17 +2,17 @@ import { sumOf } from "../utils/collections.mts";
 import { Range } from "../utils/range.mts";
 import { id } from "../utils/utility.mts";
 
-type Range = [bigint, bigint];
+type RangePair = [lo: bigint, hi: bigint];
 
 export const inputMapper = (input: string) => {
   const ranges = input.split("\n").join("").split(",");
-  return ranges.map((range) => range.split("-").map(BigInt) as Range);
+  return ranges.map((range) => range.split("-").map(BigInt) as RangePair);
 };
 
 /**
  * Given a start/end range, produce all numbers that have repeated runs of a given length
  */
-const invalidIdsWithRuns = function* ([start, end]: Range, numRuns: number) {
+const invalidIdsWithRuns = function* ([start, end]: RangePair, numRuns: number) {
   let invalidBase: bigint;
   const startString = String(start);
   if (startString.length % numRuns == 0) {
