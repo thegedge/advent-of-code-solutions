@@ -1,5 +1,5 @@
 import { sumOf } from "../utils/collections.mts";
-import { Range } from "../utils/range.mts";
+import { Range } from "../utils/data_structures/Range.mts";
 
 export const inputMapper = (input: string) => {
   // Change this if you want to map the puzzle input to something more useful

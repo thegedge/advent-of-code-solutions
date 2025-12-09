@@ -1,5 +1,5 @@
 import { merge, sumOf } from "../utils/collections.mts";
-import { max } from "../utils/math.mts";
+import { max } from "../utils/math/index.mts";
 
 const parseLine = (game: string) => {
   const [head, tail] = game.split(":");

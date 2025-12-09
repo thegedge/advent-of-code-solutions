@@ -1,4 +1,4 @@
-import type { Graph, Primitive } from "./graphs.mts";
+import type { Graph, Primitive } from "./index.mts";
 
 /**
  * Breadth-first search
@@ -25,14 +25,15 @@ export function bfs<ValueT, NodeT, KeyT extends Primitive>(
     maxDistance?: number;
 
     /** Callback function for when we visit a node */
-    process: (map: Graph<ValueT, NodeT, KeyT, number>, node: NodeT, distance: number, alreadyVisited: boolean) => boolean | void;
-  },
+    process: (
+      map: Graph<ValueT, NodeT, KeyT, number>,
+      node: NodeT,
+      distance: number,
+      alreadyVisited: boolean
+    ) => boolean | void;
+  }
 ): Map<KeyT, number> {
-  const {
-    process,
-    startingNodes,
-    maxDistance = Infinity,
-  } = options;
+  const { process, startingNodes, maxDistance = Infinity } = options;
 
   const visited = new Map<KeyT, number>();
   const queue: [NodeT, number][] = startingNodes.map((n) => [n, 0]);
@@ -55,9 +56,11 @@ export function bfs<ValueT, NodeT, KeyT extends Primitive>(
       visited.set(key, distance);
 
       const next = map.neighbours(node);
-      queue.push(...next.map((neighbour): [NodeT, number] => {
-        return [neighbour, distance + map.edgeWeight(node, neighbour)];
-      }));
+      queue.push(
+        ...next.map((neighbour): [NodeT, number] => {
+          return [neighbour, distance + map.edgeWeight(node, neighbour)];
+        })
+      );
     });
   }
 

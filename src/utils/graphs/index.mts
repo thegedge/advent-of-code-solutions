@@ -1,4 +1,4 @@
-import { memoize } from "./utility.mts";
+import { memoize } from "../utility.mts";
 
 export type Coordinate = readonly [row: number, col: number];
 export type Primitive = string | number | boolean | bigint | boolean | symbol | null | undefined;

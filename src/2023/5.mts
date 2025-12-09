@@ -1,5 +1,5 @@
 import { chunk, minOf } from "../utils/collections.mts";
-import { Range } from "../utils/range.mts";
+import { Range } from "../utils/data_structures/Range.mts";
 
 const readMap = (map: string) => {
   return map

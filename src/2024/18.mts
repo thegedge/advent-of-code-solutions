@@ -1,8 +1,8 @@
 import type { Puzzle } from "../../runner.mts";
 import { range } from "../utils/collections.mts";
-import { dijkstra } from "../utils/dijkstra.mts";
-import { type Coordinate } from "../utils/graphs.mts";
-import { GridMap } from "../utils/GridMap.mts";
+import { dijkstra } from "../utils/graphs/dijkstra.mts";
+import { GridMap } from "../utils/graphs/GridMap.mts";
+import { type Coordinate } from "../utils/graphs/index.mts";
 
 class MemorySpace extends GridMap<string> {
   override validCoord(coord: Coordinate): boolean {

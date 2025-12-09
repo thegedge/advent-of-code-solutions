@@ -5,7 +5,7 @@ import {
   type Graph,
   type NeighbourFunction,
   withinBounds,
-} from "./graphs.mts";
+} from "./index.mts";
 
 /**
  * A map backed by a two-dimensional array.

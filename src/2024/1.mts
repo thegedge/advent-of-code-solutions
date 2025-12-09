@@ -1,5 +1,5 @@
 import { countBy, sumOf, zip } from "../utils/collections.mts";
-import { abs } from "../utils/math.mts";
+import { abs } from "../utils/math/index.mts";
 import { id } from "../utils/utility.mts";
 
 export const inputMapper = (data: string) => {

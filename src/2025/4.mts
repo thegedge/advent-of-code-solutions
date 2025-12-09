@@ -1,6 +1,6 @@
 import { sumOf } from "../utils/collections.mts";
-import { surroundingDirections } from "../utils/graphs.mts";
-import { GridMap } from "../utils/GridMap.mts";
+import { GridMap } from "../utils/graphs/GridMap.mts";
+import { surroundingDirections } from "../utils/graphs/index.mts";
 
 export const inputMapper = (input: string) => {
   const cellData = input.split("\n").map((line) => {

@@ -1,6 +1,6 @@
 import type { Puzzle } from "../../runner.mts";
-import { PriorityQueue } from "../utils/PriorityQueue.mts";
 import { pairs } from "../utils/collections.mts";
+import { PriorityQueue } from "../utils/data_structures/PriorityQueue.mts";
 
 type Coordinate = [x: number, y: number, z: number];
 

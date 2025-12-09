@@ -1,4 +1,4 @@
-import { max, min } from "./math.mts";
+import { max, min } from "../math/index.mts";
 
 // TODO remove all of the `as any` once something like
 //      https://github.com/Microsoft/TypeScript/issues/27808 is supported

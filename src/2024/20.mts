@@ -1,6 +1,6 @@
-import { bfs } from "../utils/bfs.mts";
-import { type Coordinate } from "../utils/graphs.mts";
-import { GridMap } from "../utils/GridMap.mts";
+import { bfs } from "../utils/graphs/bfs.mts";
+import { GridMap } from "../utils/graphs/GridMap.mts";
+import { type Coordinate } from "../utils/graphs/index.mts";
 
 type Node = readonly [...Coordinate, numCheatsLeft: number];
 

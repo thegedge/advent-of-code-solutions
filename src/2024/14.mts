@@ -1,5 +1,5 @@
 import { range, transpose } from "../utils/collections.mts";
-import { dumpMapData, findHorizontalRuns } from "../utils/graphs.mts";
+import { dumpMapData, findHorizontalRuns } from "../utils/graphs/index.mts";
 
 const LINE_REGEX = /p=(?<px>-?\d+),(?<py>-?\d+) v=(?<vx>-?\d+),(?<vy>-?\d+)/;
 

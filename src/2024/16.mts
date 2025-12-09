@@ -1,4 +1,4 @@
-import { dijkstra } from "../utils/dijkstra.mts";
+import { dijkstra } from "../utils/graphs/dijkstra.mts";
 import {
   type Direction,
   directionDelta,
@@ -7,7 +7,7 @@ import {
   type Graph,
   numTurns,
   withinBounds,
-} from "../utils/graphs.mts";
+} from "../utils/graphs/index.mts";
 
 type Node = [row: number, column: number, direction: Direction];
 

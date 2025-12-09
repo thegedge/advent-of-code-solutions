@@ -1,7 +1,7 @@
-import { bfs } from "../utils/bfs.mts";
 import { transpose } from "../utils/collections.mts";
-import { cardinalDirections, type Coordinate } from "../utils/graphs.mts";
-import { GridMap } from "../utils/GridMap.mts";
+import { bfs } from "../utils/graphs/bfs.mts";
+import { GridMap } from "../utils/graphs/GridMap.mts";
+import { cardinalDirections, type Coordinate } from "../utils/graphs/index.mts";
 
 export const inputMapper = (data: string) => {
   return new Garden(data.split("\n").map((line) => line.split("")));

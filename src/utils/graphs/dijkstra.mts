@@ -1,5 +1,5 @@
-import { PriorityQueue } from "./PriorityQueue.mts";
-import type { Graph, Primitive } from "./graphs.mts";
+import { PriorityQueue } from "../data_structures/PriorityQueue.mts";
+import type { Graph, Primitive } from "./index.mts";
 
 export function dijkstra<ValueT, NodeT, KeyT extends Primitive>(
   map: Graph<ValueT, NodeT, KeyT, number>,

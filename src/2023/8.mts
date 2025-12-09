@@ -1,5 +1,5 @@
 import { cartesianProduct } from "../utils/collections.mts";
-import { lcm } from "../utils/math.mts";
+import { lcm } from "../utils/math/index.mts";
 
 export const inputMapper = (data: string) => {
   const [steps, ...nodes] = data.split("\n");

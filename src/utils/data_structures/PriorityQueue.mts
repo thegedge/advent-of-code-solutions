@@ -1,4 +1,4 @@
-import { binarySearch } from "./utility.mts";
+import { binarySearch } from "../utility.mts";
 
 export type CompareFn<T> = (a: T, b: T) => number;
 

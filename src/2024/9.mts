@@ -1,5 +1,5 @@
 import { sumOf } from "../utils/collections.mts";
-import { sequenceSumBig } from "../utils/math.mts";
+import { sequenceSumBig } from "../utils/math/index.mts";
 
 type Sized = { size: bigint };
 type File = Sized & { id: bigint };

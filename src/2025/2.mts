@@ -1,5 +1,5 @@
 import { sumOf } from "../utils/collections.mts";
-import { Range } from "../utils/range.mts";
+import { Range } from "../utils/data_structures/Range.mts";
 import { id } from "../utils/utility.mts";
 
 type RangePair = [lo: bigint, hi: bigint];

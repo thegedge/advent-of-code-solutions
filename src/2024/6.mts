@@ -1,4 +1,4 @@
-import { withinBounds } from "../utils/graphs.mts";
+import { withinBounds } from "../utils/graphs/index.mts";
 
 export const inputMapper = (data: string) => {
   let startCol = 0;

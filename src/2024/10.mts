@@ -1,7 +1,7 @@
-import { bfs } from "../utils/bfs.mts";
 import { sumOf } from "../utils/collections.mts";
-import { cardinalDirections, type Coordinate } from "../utils/graphs.mts";
-import { GridMap } from "../utils/GridMap.mts";
+import { bfs } from "../utils/graphs/bfs.mts";
+import { GridMap } from "../utils/graphs/GridMap.mts";
+import { cardinalDirections, type Coordinate } from "../utils/graphs/index.mts";
 
 class Trail extends GridMap<number | null> {
   override neighbours([row, col]: Coordinate) {

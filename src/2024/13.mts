@@ -1,5 +1,5 @@
 import { sumOf } from "../utils/collections.mts";
-import { solveSystem } from "../utils/math.mts";
+import { solveSystem } from "../utils/math/index.mts";
 
 const LINE_REGEX = /.+?: X[+=](?<x>\d+), Y[+=](?<y>\d+)/;
 

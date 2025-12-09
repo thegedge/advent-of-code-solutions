@@ -1,4 +1,4 @@
-import { GridMap } from "../utils/GridMap.mts";
+import { GridMap } from "../utils/graphs/GridMap.mts";
 
 export const inputMapper = (data: string) => {
   const [map, movements] = data.split("\n\n");
