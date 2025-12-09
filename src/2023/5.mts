@@ -1,4 +1,4 @@
-import { chunk, minMap } from "../utils/collections.mts";
+import { chunk, minOf } from "../utils/collections.mts";
 import { Range } from "../utils/range.mts";
 
 const readMap = (map: string) => {
@@ -33,7 +33,7 @@ export const inputMapper = (data: string) => {
 };
 
 export const solvePart1 = ({ seeds, mappings }: ReturnType<typeof inputMapper>) => {
-  return minMap(seeds, (seed) => {
+  return minOf(seeds, (seed) => {
     return mappings.reduce((value, mapping) => {
       const range = mapping.find((range) => range.source.includes(value));
       return range ? range.dest.lo + (value - range.source.lo) : value;
@@ -67,5 +67,5 @@ export const solvePart2 = ({ seeds, mappings }: ReturnType<typeof inputMapper>) 
     return newRanges;
   }, startingRanges);
 
-  return minMap(mappedRanges, (range) => range.lo) ?? 0;
+  return minOf(mappedRanges, (range) => range.lo) ?? 0;
 };

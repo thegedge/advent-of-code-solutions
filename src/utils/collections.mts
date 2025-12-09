@@ -1,11 +1,27 @@
-export { chunk, groupBy, merge, minBy, sortBy } from "lodash-es";
+export { chunk, groupBy, merge, sortBy } from "lodash-es";
 
 type SimpleLiteral = string | symbol | number | boolean | bigint;
 
+/**
+ * Generate an array of the given length.
+ */
 export const range = (n: number): number[] => {
   return [...Array(n).keys()];
 };
 
+/**
+ * Returns element-wise pairs of elements from the given arrays.
+ *
+ * @returns {Array<[T, U]>} the zipped array.
+ *
+ * @example
+ *  zip([1, 2, 3], ["a", "b", "c"])
+ *  // returns [
+ *  //   [1, "a"],
+ *  //   [2, "b"],
+ *  //   [3, "c"]
+ *  // ]
+ */
 export const zip = <T, U>(a: T[], b: U[]): [T, U][] => {
   if (a.length !== b.length) {
     throw new Error("Arrays must be of the same length");
@@ -13,6 +29,21 @@ export const zip = <T, U>(a: T[], b: U[]): [T, U][] => {
   return a.map((item, index) => [item, b[index]]);
 };
 
+/**
+ * Generate the Cartesian product of the given iterables.
+ *
+ * @yields {Array<T>} the Cartesian product of the given iterables.
+ *
+ * @example
+ *  Array.from(cartesianProduct([1, 2], [2, 3]))
+ *  // returns [
+ *  //   [1, 2],
+ *  //   [1, 3],
+ *  //   [2, 2],
+ *  //   [2, 3]
+ *  // ]
+ *  //
+ */
 export function* cartesianProduct<T>(...iterables: Iterable<T>[]): Generator<T[]> {
   const myIterable = iterables.shift();
   if (!myIterable) {
@@ -25,6 +56,9 @@ export function* cartesianProduct<T>(...iterables: Iterable<T>[]): Generator<T[]
   }
 }
 
+/**
+ * Sum the values of an iterable using a mapping function.
+ */
 export const sumOf = <T, N extends number | bigint>(iterable: Iterable<T>, fn: (item: T, index: number) => N): N => {
   let sum: N | undefined;
   let index = 0;
@@ -45,6 +79,53 @@ export const sumOf = <T, N extends number | bigint>(iterable: Iterable<T>, fn: (
   return sum;
 };
 
+/**
+ * Find the minimum value in an iterable using a mapping function.
+ *
+ * @returns The item with the minimum mapped value, or undefined if the iterable is empty.
+ */
+export const minBy = <T, N extends number | bigint>(
+  iterable: Iterable<T>,
+  fn: (item: T, index: number) => N
+): T | undefined => {
+  let max: T | undefined;
+  let minValue: N | undefined;
+  let index = 0;
+  for (const item of iterable) {
+    const value = fn(item, index);
+    if (minValue === undefined || value < minValue) {
+      minValue = value;
+      max = item;
+    }
+    index += 1;
+  }
+
+  return max;
+};
+
+/**
+ * Find the minimum value in an array using a mapping function.
+ *
+ * @returns The minimum mapped value, or null if the array is empty.
+ */
+export const minOf = <T, R extends number | bigint>(arr: T[], fn: (item: T, index: number) => R): R | undefined => {
+  return arr.reduce(
+    (min, item, index) => {
+      const value = fn(item, index);
+      if (min === undefined) {
+        return value;
+      }
+      return min < value ? min : value;
+    },
+    undefined as R | undefined
+  );
+};
+
+/**
+ * Find the maximum value in an array using a mapping function.
+ *
+ * @returns The item with the maximum mapped value, or undefined if the iterable is empty.
+ */
 export const maxBy = <T, N extends number | bigint>(
   iterable: Iterable<T>,
   fn: (item: T, index: number) => N
@@ -64,6 +145,11 @@ export const maxBy = <T, N extends number | bigint>(
   return max;
 };
 
+/**
+ * Find the maximum value in an array using a mapping function.
+ *
+ * @returns The maximum mapped value, or undefined if the iterable is empty.
+ */
 export const maxOf = <T, N extends number | bigint>(
   iterable: Iterable<T>,
   fn: (item: T, index: number) => N
@@ -81,6 +167,9 @@ export const maxOf = <T, N extends number | bigint>(
   return maxValue;
 };
 
+/**
+ * Count the number of distinct values produced by a selector function applied to an iterable.
+ */
 export const countBy = <T extends SimpleLiteral, V extends SimpleLiteral>(
   iterable: Iterable<T>,
   selector: (element: T, index: number) => V
@@ -95,27 +184,23 @@ export const countBy = <T extends SimpleLiteral, V extends SimpleLiteral>(
   return result;
 };
 
+/**
+ * Replace all occurrences of the given target value with the replacement value.
+ */
 export const replaceAll = <T,>(arr: T[], target: T, replacement: T): T[] => {
   return arr.map((v) => (v === target ? replacement : v));
 };
 
+/**
+ * Transpose a two-dimensional array.
+ */
 export const transpose = <T,>(matrix: T[][]): T[][] => {
   return matrix[0].map((_, i) => matrix.map((row) => row[i]));
 };
 
-export const minMap = <T, R extends number | bigint>(arr: T[], fn: (item: T, index: number) => R): R | null => {
-  return arr.reduce(
-    (min, item, index) => {
-      const value = fn(item, index);
-      if (min === null) {
-        return value;
-      }
-      return min < value ? min : value;
-    },
-    null as R | null
-  );
-};
-
+/**
+ * Generate all combinations of the given array of length `n`.
+ */
 export const combinations = function* <T>(array: T[], n: number, from = 0): Generator<T[]> {
   if (n == 0) {
     yield [];
@@ -130,6 +215,9 @@ export const combinations = function* <T>(array: T[], n: number, from = 0): Gene
   }
 };
 
+/**
+ * Generate all pairs of elements from the given array.
+ */
 export const pairs = function* <T>(array: T[]): Generator<[T, T]> {
   for (let i = 0; i < array.length; ++i) {
     for (let j = i + 1; j < array.length; ++j) {
