@@ -11,7 +11,10 @@ export const inputMapper = (input: string) => {
   }));
 };
 
-export const solvePart1 = (input: ReturnType<typeof inputMapper>, name: Puzzle["name"]) => {
+const solve = (
+  input: ReturnType<typeof inputMapper>,
+  fn: (circuits: Map<number, number>, iteration: number) => boolean
+) => {
   const heap = new PriorityQueue(
     pairs(input).map(([a, b]) => ({
       distance: Math.hypot(a.coords[0] - b.coords[0], a.coords[1] - b.coords[1], a.coords[2] - b.coords[2]),
@@ -23,9 +26,8 @@ export const solvePart1 = (input: ReturnType<typeof inputMapper>, name: Puzzle["
   let circuitId = 0;
   const coordToCircuit = new Map<string, number>(); // coordinate -> circuit id
   const circuits = new Map<number, number>(); // circuit id -> size
-  const maxIterations = name == "Main input" ? 1000 : 10;
 
-  for (let iteration = 0; heap.length > 0 && iteration < maxIterations; ++iteration) {
+  for (let iteration = 0; heap.length > 0 && fn(circuits, iteration); ++iteration) {
     const {
       coordinates: [a, b],
     } = heap.pop()!;
@@ -67,6 +69,15 @@ export const solvePart1 = (input: ReturnType<typeof inputMapper>, name: Puzzle["
       coordToCircuit.set(b.string, id);
     }
   }
+
+  return circuits;
+};
+
+export const solvePart1 = (input: ReturnType<typeof inputMapper>, name: Puzzle["name"]) => {
+  const maxIterations = name == "Main input" ? 1000 : 10;
+  const circuits = solve(input, (circuits, iteration) => {
+    return iteration < maxIterations;
+  });
 
   const circuitSizes = Array.from(circuits.values()).sort((a, b) => b - a);
   return circuitSizes.at(0)! * circuitSizes.at(1)! * circuitSizes.at(2)!;
