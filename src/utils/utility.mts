@@ -75,6 +75,13 @@ export const binarySearch = <T,>(array: T[], value: T, compare?: (a: T, b: T) =>
 };
 
 /**
+ * Test whether or not a given value is within an inclusive range.
+ */
+export const inRange = <T extends number | bigint>(value: T, lo: T, hi: T): boolean => {
+  return value >= lo && value <= hi;
+};
+
+/**
  * Reads from a file.
  *
  * If the file doesn't exist, the given function is called and the result is cached at that location.
