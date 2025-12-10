@@ -13,6 +13,18 @@ import {
  * By default,
  */
 export class GridMap<T> implements Graph<T, Coordinate, number> {
+  static fromDimensions<T>(
+    width: number,
+    height: number,
+    defaultValue: T,
+    neighbourFunction?: NeighbourFunction<Coordinate>
+  ) {
+    return new GridMap(
+      Array.from({ length: height }, () => Array.from({ length: width }, () => defaultValue)),
+      neighbourFunction
+    );
+  }
+
   /** The map data */
   readonly data: T[][];
 
