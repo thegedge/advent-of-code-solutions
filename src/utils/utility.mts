@@ -29,11 +29,12 @@ export const nonNil = <T,>(v: T | null | undefined): v is T => {
  * Memoizes the given function.
  */
 export const memoize = <ArgsT extends unknown[], ReturnT>(
-  fn: (...args: ArgsT) => ReturnT
+  fn: (...args: ArgsT) => ReturnT,
+  keyFn = (...args: ArgsT) => args.toString()
 ): ((...args: ArgsT) => ReturnT) => {
   const cache = new Map<string, ReturnT>();
   return (...args: ArgsT) => {
-    const key = args.toString();
+    const key = keyFn(...args);
     if (cache.has(key)) {
       return cache.get(key)!;
     }
