@@ -347,6 +347,9 @@ const measure = <T,>(fn: () => T): [result: T, duration: string] => {
 
 const emojiForResult = (result: unknown, expected: JSONScalar | undefined): "✅" | "❌" | "❓" => {
   if (expected == null) {
+    if (result == null) {
+      return "✅";
+    }
     return "❓";
   }
 

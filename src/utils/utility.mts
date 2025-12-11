@@ -25,24 +25,31 @@ export const nonNil = <T,>(v: T | null | undefined): v is T => {
   return v != null;
 };
 
+type MemoizedFunction<ArgsT extends unknown[], ReturnT> = ((...args: ArgsT) => ReturnT) & {
+  cache: Map<string, ReturnT>;
+};
+
 /**
  * Memoizes the given function.
  */
 export const memoize = <ArgsT extends unknown[], ReturnT>(
   fn: (...args: ArgsT) => ReturnT,
-  keyFn = (...args: ArgsT) => args.toString()
-): ((...args: ArgsT) => ReturnT) => {
+  keyFn = (...args: ArgsT) => JSON.stringify(args)
+): MemoizedFunction<ArgsT, ReturnT> => {
   const cache = new Map<string, ReturnT>();
-  return (...args: ArgsT) => {
-    const key = keyFn(...args);
-    if (cache.has(key)) {
-      return cache.get(key)!;
-    }
+  return Object.assign(
+    (...args: ArgsT) => {
+      const key = keyFn(...args);
+      if (cache.has(key)) {
+        return cache.get(key)!;
+      }
 
-    const value = fn(...args);
-    cache.set(key, value);
-    return value;
-  };
+      const value = fn(...args);
+      cache.set(key, value);
+      return value;
+    },
+    { cache }
+  );
 };
 
 /**
