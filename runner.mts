@@ -42,7 +42,9 @@ const SYSTEM_PROMPT = `
 
   The example inputs are typically in a \`<pre><code>\` block, and are unlikely to contain \`<em>\` tags. They are
   usually preceded by a phrase like "For example" or "here's another example", but this is not always the case. Keep
-  the example input as it is, without any modifications. In particular, consider all whitespace important.
+  the example input as it is, without any modifications. In particular, consider all whitespace important. Sometimes
+  the description may break up a bigger input line by line and explain how to interpret each line, but the problem
+  itself is still a single input.
 
   The examples outputs are often embedded in the paragraph, in a <code> block. If it's just a single number or
   string, it often will be wrapped in an <em> tag (for example, \`<code><em>123</em></code>\`), but this is not
