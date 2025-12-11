@@ -1,4 +1,4 @@
-#!/usr/bin/env node --use-strict --harmony --max-old-space-size=16000 --single-threaded
+#!/usr/bin/env node --use-strict --stack-size=4096 --max-old-space-size=16000 --single-threaded
 import { parse } from "node-html-parser";
 import { mkdir, rm, statfs, writeFile } from "node:fs/promises";
 import { parseArgs, styleText } from "node:util";
@@ -262,6 +262,12 @@ const main = async (argv: string[]) => {
         default: false,
         description: "Reload the problem description",
       },
+      "only-examples": {
+        type: "boolean",
+        short: "e",
+        default: false,
+        description: "Only solve the examples",
+      },
     },
   });
 
@@ -291,6 +297,10 @@ const main = async (argv: string[]) => {
   }
 
   for (const puzzle of puzzles) {
+    if (values["only-examples"] && puzzle.name === "Main input") {
+      continue;
+    }
+
     console.log(`-- ${puzzle.name} -------------------------\n`);
 
     const mappedInput = mod.inputMapper?.(puzzle.input, puzzle.name) ?? puzzle.input;
