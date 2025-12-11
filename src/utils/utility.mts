@@ -32,10 +32,12 @@ type MemoizedFunction<ArgsT extends unknown[], ReturnT> = ((...args: ArgsT) => R
 /**
  * Memoizes the given function.
  */
-export const memoize = <ArgsT extends unknown[], ReturnT>(
+export const memoize = <ArgsT extends any[], ReturnT>(
   fn: (...args: ArgsT) => ReturnT,
-  keyFn = (...args: ArgsT) => JSON.stringify(args)
+  keyFn?: NoInfer<(...args: ArgsT) => string>
 ): MemoizedFunction<ArgsT, ReturnT> => {
+  keyFn ??= (...args: ArgsT) => JSON.stringify(args);
+
   const cache = new Map<string, ReturnT>();
   return Object.assign(
     (...args: ArgsT) => {
