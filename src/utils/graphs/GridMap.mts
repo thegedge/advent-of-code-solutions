@@ -1,3 +1,4 @@
+import { arrayOf } from "../collections.mts";
 import {
   cardinalDirections,
   type Coordinate,
@@ -20,7 +21,7 @@ export class GridMap<T> implements Graph<T, Coordinate, number> {
     neighbourFunction?: NeighbourFunction<Coordinate>
   ) {
     return new GridMap(
-      Array.from({ length: height }, () => Array.from({ length: width }, () => defaultValue)),
+      arrayOf(height, () => arrayOf(width, defaultValue)),
       neighbourFunction
     );
   }
