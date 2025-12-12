@@ -126,15 +126,13 @@ const importProblem = async (year: number, problem: number) => {
         };
       }
     } catch (error) {
-      if (error instanceof SyntaxError) {
-        throw error;
+      if (error instanceof Error && error.message.includes("ERR_MODULE_NOT_FOUND")) {
+        return null;
       }
 
-      // Assume a "not found" error
+      throw error;
     }
   }
-
-  return null;
 };
 
 const fetchExamples = async (year: number, problem: number): Promise<Puzzle[]> => {
