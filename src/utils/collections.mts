@@ -44,6 +44,11 @@ export const zip = <T, U>(a: T[], b: U[]): [T, U][] => {
   return a.map((item, index) => [item, b[index]]);
 };
 
+type Tuples<T> = T extends [Iterable<infer T1>, ...infer Rest]
+  ? //
+    [T1, ...Tuples<Rest>]
+  : [];
+
 /**
  * Generate the Cartesian product of the given iterables.
  *
@@ -59,16 +64,23 @@ export const zip = <T, U>(a: T[], b: U[]): [T, U][] => {
  *  // ]
  *  //
  */
-export function* cartesianProduct<T>(...iterables: Iterable<T>[]): Generator<T[]> {
-  const myIterable = iterables.shift();
-  if (!myIterable) {
-    yield [];
-    return;
+export function* cartesianProduct<T extends Iterable<any>[]>(...iterables: T): Generator<Tuples<T>> {
+  const result: unknown[] = [];
+  function* recurse(iterables: Iterable<any>[]): Generator<Tuples<T>> {
+    const [iterable, ...rest] = iterables;
+    if (!iterable) {
+      yield [...result] as Tuples<T>;
+      return;
+    }
+
+    for (const item of iterable) {
+      result.push(item);
+      yield* recurse(rest);
+      result.pop();
+    }
   }
 
-  for (const item of myIterable) {
-    yield* cartesianProduct(...iterables, [item]);
-  }
+  yield* recurse(iterables);
 }
 
 /**
