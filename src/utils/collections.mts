@@ -13,6 +13,10 @@ export const range = (n: number): number[] => {
  * Generate an array of the given length with the given default value.
  */
 export const arrayOf = <T,>(n: number, fnOrDefaultValue: T | ((index: number) => T)): T[] => {
+  if (n === 0) {
+    return [];
+  }
+
   const value = fnOrDefaultValue;
   if (typeof value === "function") {
     return Array.from({ length: n }, (_, index) => (value as (index: number) => T)(index));
