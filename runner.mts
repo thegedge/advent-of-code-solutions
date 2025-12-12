@@ -296,16 +296,28 @@ const main = async (argv: string[]) => {
     process.exit(1);
   }
 
-  for (const puzzle of puzzles) {
+  const results = puzzles.map((puzzle) => {
     if (values["only-examples"] && puzzle.name === "Main input") {
+      return null;
+    }
+
+    const mappedInput = mod.inputMapper?.(puzzle.input, puzzle.name) ?? puzzle.input;
+    return {
+      puzzle,
+      part1: measure(() => mod.solvePart1(mappedInput, puzzle.name)),
+      part2: measure(() => mod.solvePart2(mappedInput, puzzle.name)),
+    };
+  });
+
+  for (const result of results) {
+    if (!result) {
       continue;
     }
 
+    const { puzzle, part1, part2 } = result;
     console.log(`-- ${puzzle.name} -------------------------\n`);
 
-    const mappedInput = mod.inputMapper?.(puzzle.input, puzzle.name) ?? puzzle.input;
-
-    const [part1Result, part1Duration] = measure(() => mod.solvePart1(mappedInput, puzzle.name));
+    const [part1Result, part1Duration] = part1;
     const part1Emoji = emojiForResult(part1Result, puzzle.outputPart1);
     console.log(
       part1Emoji,
@@ -314,7 +326,7 @@ const main = async (argv: string[]) => {
       styleText(["italic", "cyan"], `(${part1Duration})`)
     );
 
-    const [part2Result, part2Duration] = measure(() => mod.solvePart2(mappedInput, puzzle.name));
+    const [part2Result, part2Duration] = part2;
     const part2Emoji = emojiForResult(part2Result, puzzle.outputPart2);
     console.log(
       part2Emoji,
