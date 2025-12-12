@@ -320,7 +320,7 @@ const main = async (argv: string[]) => {
     console.log(
       part1Emoji,
       styleText("dim", "Part 1 result:"),
-      String(part1Result),
+      part1Result instanceof Error ? styleText("red", part1Result.message) : String(part1Result),
       styleText(["italic", "cyan"], `(${part1Duration})`)
     );
 
@@ -336,9 +336,14 @@ const main = async (argv: string[]) => {
   }
 };
 
-const measure = <T,>(fn: () => T): [result: T, duration: string] => {
+const measure = <T,>(fn: () => T): [result: T | Error, duration: string] => {
   const start = performance.now();
-  const result = fn();
+  let result: T | Error;
+  try {
+    result = fn();
+  } catch (error) {
+    result = error instanceof Error ? error : new Error(String(error));
+  }
   const duration = performance.now() - start;
 
   let measurement: string;
