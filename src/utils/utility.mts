@@ -25,22 +25,21 @@ export const nonNil = <T,>(v: T | null | undefined): v is T => {
   return v != null;
 };
 
-type MemoizedFunction<ArgsT extends unknown[], ReturnT> = ((...args: ArgsT) => ReturnT) & {
-  cache: Map<string, ReturnT>;
+type MemoizedFunction<F extends (...args: never[]) => any> = F & {
+  cache: Map<string, ReturnType<F>>;
 };
+
+type KeyFunction<F extends (...args: never[]) => any> = (...args: Parameters<F>) => string;
 
 /**
  * Memoizes the given function.
  */
-export const memoize = <ArgsT extends any[], ReturnT>(
-  fn: (...args: ArgsT) => ReturnT,
-  keyFn?: NoInfer<(...args: ArgsT) => string>
-): MemoizedFunction<ArgsT, ReturnT> => {
-  keyFn ??= (...args: ArgsT) => JSON.stringify(args);
+export const memoize = <F extends (...args: never[]) => any>(fn: F, keyFn?: KeyFunction<F>): MemoizedFunction<F> => {
+  keyFn ??= (...args: any[]) => JSON.stringify(args);
 
-  const cache = new Map<string, ReturnT>();
+  const cache = new Map<string, ReturnType<F>>();
   return Object.assign(
-    (...args: ArgsT) => {
+    ((...args: Parameters<F>) => {
       const key = keyFn(...args);
       if (cache.has(key)) {
         return cache.get(key)!;
@@ -49,7 +48,7 @@ export const memoize = <ArgsT extends any[], ReturnT>(
       const value = fn(...args);
       cache.set(key, value);
       return value;
-    },
+    }) as F,
     { cache }
   );
 };
@@ -115,10 +114,13 @@ export const cachedRead = memoize(async (filepath: string, f: () => string | Pro
  *
  * If the file doesn't exist, the given function is called and the result is cached at that location.
  */
-export const cachedReadJson = memoize(async <T,>(filepath: string, f: () => T | Promise<T>): Promise<T> => {
-  const value = await cachedRead(filepath, async () => {
-    const data = await f();
-    return JSON.stringify(data, null, 2);
-  });
-  return JSON.parse(value);
-});
+export const cachedReadJson = memoize(
+  async <T,>(filepath: string, f: () => T | Promise<T>): Promise<T> => {
+    const value = await cachedRead(filepath, async () => {
+      const data = await f();
+      return JSON.stringify(data, null, 2);
+    });
+    return JSON.parse(value);
+  },
+  (filepath, _f) => filepath
+);
