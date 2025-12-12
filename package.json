@@ -15,6 +15,7 @@
     "node-html-parser": "^7.0.1",
     "ollama": "^0.6.3",
     "prettier": "^3.7.3",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "yalps": "0.6.3"
   }
 }
